@@ -1,0 +1,28 @@
+INFO 2026-06-24 21:05:10,676 middleware CRITICAL ACTION | user=admin | path=/sonas/contrats/nouveau/ | status=200
+INFO 2026-06-24 21:05:53,520 middleware CRITICAL ACTION | user=admin | path=/sonas/contrats/nouveau/ | status=302
+INFO 2026-06-24 21:06:28,036 middleware CRITICAL ACTION | user=admin | path=/sonas/contrats/2/activer/ | status=302
+INFO 2026-06-25 10:25:56,071 audit AUDIT | user=gerant | role=GERANT | action=AGENT_DESACTIVE | path=/sonas/agents/7/toggle/ | status=200 | Agent testagent désactivé par gerant
+INFO 2026-06-25 10:25:56,078 audit AUDIT | user=gerant | role=GERANT | action=toggle_active | path=/sonas/agents/7/toggle/ | status=302 | POST /sonas/agents/7/toggle/
+INFO 2026-06-25 10:27:05,143 audit AUDIT | user=gerant | role=GERANT | action=AGENT_ACTIVE | path=/sonas/agents/7/toggle/ | status=200 | Agent testagent activé par gerant
+INFO 2026-06-25 10:27:05,149 audit AUDIT | user=gerant | role=GERANT | action=toggle_active | path=/sonas/agents/7/toggle/ | status=302 | POST /sonas/agents/7/toggle/
+INFO 2026-06-25 10:38:25,247 middleware CRITICAL ACTION | user=agent | path=/sonas/sinistres/1/statut/ | status=302
+INFO 2026-06-25 10:38:25,253 audit AUDIT | user=agent | role=AGENT | action=update_status | path=/sonas/sinistres/1/statut/ | status=302 | statut=EN_COURS
+INFO 2026-06-25 10:39:06,977 middleware CRITICAL ACTION | user=gerant | path=/sonas/sinistres/1/valider/ | status=302
+INFO 2026-06-25 10:39:06,983 audit AUDIT | user=gerant | role=GERANT | action=validate | path=/sonas/sinistres/1/valider/ | status=302 | statut=REJETE | motif_rejet=
+INFO 2026-06-25 10:39:20,831 middleware CRITICAL ACTION | user=gerant | path=/sonas/sinistres/1/valider/ | status=302
+INFO 2026-06-25 10:39:20,837 audit AUDIT | user=gerant | role=GERANT | action=validate | path=/sonas/sinistres/1/valider/ | status=302 | statut=REJETE | motif_rejet=non valide
+INFO 2026-06-25 10:42:54,768 middleware CRITICAL ACTION | user=agent | path=/sonas/sinistres/2/statut/ | status=302
+INFO 2026-06-25 10:42:54,773 audit AUDIT | user=agent | role=AGENT | action=update_status | path=/sonas/sinistres/2/statut/ | status=302 | statut=EN_COURS
+INFO 2026-06-25 10:43:41,474 middleware CRITICAL ACTION | user=gerant | path=/sonas/sinistres/2/valider/ | status=302
+INFO 2026-06-25 10:43:41,481 audit AUDIT | user=gerant | role=GERANT | action=validate | path=/sonas/sinistres/2/valider/ | status=302 | statut=VALIDE | motif_rejet=
+INFO 2026-06-25 11:03:10,504 audit AUDIT | user=agent | role=AGENT | action=validate | path=/sonas/biens/3/valider/ | status=302 | statut=VALIDE | motif_rejet=
+INFO 2026-06-25 11:06:00,338 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/3/activer/ | status=302
+INFO 2026-06-25 11:06:00,343 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/3/activer/ | status=302 | POST /sonas/contrats/3/activer/
+INFO 2026-06-25 11:06:05,457 middleware CRITICAL ACTION | user=agent | path=/sonas/sinistres/3/statut/ | status=302
+INFO 2026-06-25 11:06:05,463 audit AUDIT | user=agent | role=AGENT | action=update_status | path=/sonas/sinistres/3/statut/ | status=302 | statut=EN_COURS
+INFO 2026-06-25 20:52:32,213 middleware CRITICAL ACTION | user=gerant | path=/sonas/sinistres/3/valider/ | status=302
+INFO 2026-06-25 20:52:32,219 audit AUDIT | user=gerant | role=GERANT | action=validate | path=/sonas/sinistres/3/valider/ | status=302 | statut=VALIDE | motif_rejet=
+INFO 2026-06-25 20:52:53,754 audit AUDIT | user=gerant | role=GERANT | action=AGENT_DESACTIVE | path=/sonas/agents/7/toggle/ | status=200 | Agent testagent désactivé par gerant
+INFO 2026-06-25 20:52:53,760 audit AUDIT | user=gerant | role=GERANT | action=toggle_active | path=/sonas/agents/7/toggle/ | status=302 | POST /sonas/agents/7/toggle/
+INFO 2026-06-25 20:52:56,076 audit AUDIT | user=gerant | role=GERANT | action=AGENT_ACTIVE | path=/sonas/agents/7/toggle/ | status=200 | Agent testagent activé par gerant
+INFO 2026-06-25 20:52:56,082 audit AUDIT | user=gerant | role=GERANT | action=toggle_active | path=/sonas/agents/7/toggle/ | status=302 | POST /sonas/agents/7/toggle/
