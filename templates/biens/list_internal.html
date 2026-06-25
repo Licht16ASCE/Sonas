@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Biens{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1>{% if user.is_client %}Mes biens{% else %}Biens immobiliers{% endif %}</h1>
+        <p>{% if user.is_client %}Vos déclarations et leur statut de validation{% else %}Gestion et validation des biens{% endif %}</p>
+    </div>
+    {% if user.is_client %}
+    <a href="{% url 'biens_client:create' %}" class="sonas-btn sonas-btn-primary">Déclarer un bien</a>
+    {% else %}
+    <a href="{% url 'biens:create' %}" class="sonas-btn sonas-btn-primary">Nouveau bien</a>
+    {% endif %}
+</div>
+{% if not user.is_client %}
+<form method="get" class="mb-4 flex gap-2">
+    <input type="hidden" name="filter" value="{{ active_filter }}">
+    <input type="search" name="q" value="{{ search }}" placeholder="Rechercher client, référence..." class="form-input max-w-md">
+</form>
+{% include 'partials/filter_buttons.html' %}
+{% endif %}
+<div class="sonas-card overflow-hidden">
+    <table class="sonas-table">
+        <thead><tr>
+            <th>Référence</th>
+            {% if not user.is_client %}<th>Client</th>{% endif %}
+            <th>Ville</th>
+            <th>Type</th>
+            <th>Statut</th>
+            <th></th>
+        </tr></thead>
+        <tbody>
+            {% for b in biens %}
+            <tr>
+                <td class="font-medium">{{ b.reference }}</td>
+                {% if not user.is_client %}<td>{{ b.client.display_name }}</td>{% endif %}
+                <td>{{ b.ville }}</td>
+                <td>{{ b.get_type_bien_display }}</td>
+                <td><span class="sonas-badge sonas-badge-{% if b.statut == 'VALIDE' %}green{% elif b.statut == 'REJETE' %}red{% else %}yellow{% endif %}">{{ b.get_statut_display }}</span></td>
+                <td><a href="{% if user.is_client %}{% url 'biens_client:detail' b.pk %}{% else %}{% url 'biens:detail' b.pk %}{% endif %}" class="text-indigo-600 hover:underline font-medium">Voir</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="p-8 text-center text-slate-500">Aucun bien.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

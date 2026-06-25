@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}{{ contrat.reference }}{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+    <div>
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+            <h1>{{ contrat.reference }}</h1>
+            <span class="sonas-badge sonas-badge-{% if contrat.statut == 'ACTIF' %}green{% elif contrat.statut == 'EXPIRE' or contrat.statut == 'RESILIE' %}red{% else %}yellow{% endif %}">
+                {{ contrat.get_statut_display }}
+            </span>
+        </div>
+        <p>Bien : <a href="{% if user.is_client %}{% url 'biens_client:detail' contrat.bien.pk %}{% else %}{% url 'biens:detail' contrat.bien.pk %}{% endif %}" class="text-indigo-600 hover:underline">{{ contrat.bien.reference }}</a> — {{ contrat.bien.ville }}</p>
+    </div>
+    <a href="{% if user.is_client %}{% url 'contrats_client:list' %}{% else %}{% url 'contrats:list' %}{% endif %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Contrats</a>
+</div>
+
+{% if contrat.statut == 'BROUILLON' and user.is_client %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20">
+    <p class="font-semibold text-amber-800 dark:text-amber-200">Souscription en attente d'activation</p>
+    <p class="text-sm text-amber-700/80 dark:text-amber-300/70 mt-1">Un agent va examiner votre demande et activer le contrat. Vous serez notifié.</p>
+</div>
+{% endif %}
+
+{% if contrat.statut == 'ACTIF' and contrat.jours_restants <= 30 %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-amber-400">
+    <p class="font-semibold">Expiration proche — J-{{ contrat.jours_restants }}</p>
+    <p class="text-sm text-slate-500 mt-1">Fin de contrat le {{ contrat.date_fin|date:"d/m/Y" }}</p>
+</div>
+{% endif %}
+
+{% if contrat.sinistres_bloques %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
+    <p class="font-semibold text-red-800 dark:text-red-200">Sinistres bloqués</p>
+    <p class="text-sm mt-1">Ce contrat est expiré — les nouvelles déclarations de sinistre ne sont plus possibles.</p>
+</div>
+{% endif %}
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Informations contractuelles</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Date de début</dt><dd class="font-medium">{{ contrat.date_debut|date:"d/m/Y" }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Date de fin</dt><dd class="font-medium">{{ contrat.date_fin|date:"d/m/Y" }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant annuel</dt><dd class="font-medium">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} €{% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Créé le</dt><dd class="font-medium">{{ contrat.created_at|date:"d/m/Y" }}</dd></div>
+            {% if contrat.notes %}
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <dt class="text-slate-500 mb-1">Notes</dt>
+                <dd class="text-slate-700 dark:text-slate-300">{{ contrat.notes }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+    </div>
+
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Bien assuré</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Référence</dt><dd class="font-medium">{{ contrat.bien.reference }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Type</dt><dd class="font-medium">{{ contrat.bien.get_type_bien_display }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Adresse</dt><dd class="font-medium text-right">{{ contrat.bien.adresse }}, {{ contrat.bien.ville }}</dd></div>
+        </dl>
+        {% if user.is_client and contrat.statut == 'ACTIF' and contrat.can_declare_sinistre %}
+        <a href="{% url 'sinistres_client:create' %}" class="sonas-btn sonas-btn-warning sonas-btn-sm mt-5">Déclarer un sinistre</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if sinistres %}
+<div class="mt-6 sonas-card p-6">
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="font-bold">Sinistres liés</h2>
+        {% if user.is_client %}
+        <a href="{% url 'sinistres_client:list' %}" class="text-sm text-indigo-600 hover:underline">Tout voir</a>
+        {% endif %}
+    </div>
+    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for s in sinistres %}
+        <li class="py-3 flex justify-between items-center text-sm">
+            <span class="font-medium">{{ s.reference }} — {{ s.get_type_sinistre_display }}</span>
+            <span class="sonas-badge sonas-badge-gray">{{ s.get_statut_display }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% elif user.is_client and contrat.statut == 'ACTIF' and contrat.can_declare_sinistre %}
+<div class="mt-6 sonas-card p-6 text-center">
+    <p class="text-sm text-slate-500 mb-3">Aucun sinistre déclaré sur ce contrat.</p>
+    <a href="{% url 'sinistres_client:create' %}" class="sonas-btn sonas-btn-warning sonas-btn-sm">Déclarer un sinistre</a>
+</div>
+{% endif %}
+
+{% if show_next_steps and user.is_client %}
+<div class="mt-6 sonas-card p-6">
+    <h2 class="font-bold mb-4">Où en suis-je ?</h2>
+    <div class="grid sm:grid-cols-3 gap-4 text-center text-sm">
+        <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/30">
+            <p class="font-semibold">Souscription</p>
+            <p class="text-slate-500 text-xs mt-1">Envoyée</p>
+        </div>
+        <div class="p-3 rounded-xl {% if contrat.statut == 'ACTIF' %}bg-emerald-50 dark:bg-emerald-950/30{% else %}bg-slate-50 dark:bg-slate-800/50{% endif %}">
+            <p class="font-semibold">Activation</p>
+            <p class="text-slate-500 text-xs mt-1">{% if contrat.statut == 'ACTIF' %}Contrat actif{% else %}En attente agent{% endif %}</p>
+        </div>
+        <div class="p-3 rounded-xl {% if sinistres %}bg-emerald-50 dark:bg-emerald-950/30{% endif %}">
+            <p class="font-semibold">Sinistres</p>
+            <p class="text-slate-500 text-xs mt-1">{% if sinistres %}{{ sinistres|length }} déclaré(s){% elif contrat.can_declare_sinistre %}Disponible{% else %}—{% endif %}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

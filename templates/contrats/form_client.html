@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl">
+    <div class="sonas-page-header mb-8">
+        <h1>{{ title }}</h1>
+        <p>Choisissez un bien validé et renseignez les dates de couverture souhaitées.</p>
+    </div>
+
+    {% if biens_eligibles == 0 %}
+    <div class="sonas-card p-8 text-center mb-6">
+        <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+            <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        </div>
+        <h2 class="font-bold text-lg mb-2">Aucun bien éligible</h2>
+        {% if biens_en_attente %}
+        <p class="text-sm text-slate-500 mb-4">Vous avez {{ biens_en_attente }} bien(s) en attente de validation. Un agent doit les valider avant souscription.</p>
+        {% else %}
+        <p class="text-sm text-slate-500 mb-4">Déclarez d'abord un bien et attendez sa validation par un agent.</p>
+        {% endif %}
+        <div class="flex flex-wrap gap-3 justify-center">
+            <a href="{% url 'biens_client:create' %}" class="sonas-btn sonas-btn-primary">Déclarer un bien</a>
+            <a href="{% url 'biens_client:list' %}" class="sonas-btn sonas-btn-secondary">Voir mes biens</a>
+        </div>
+    </div>
+    {% else %}
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2">
+            <form method="post" class="sonas-card p-6 space-y-5">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="sonas-label">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors.0 }}</p>{% endif %}
+                </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                <div class="text-sm text-red-600">{{ form.non_field_errors.0 }}</div>
+                {% endif %}
+                <div class="flex flex-wrap gap-3 pt-2">
+                    <button type="submit" class="sonas-btn sonas-btn-primary">Envoyer la souscription</button>
+                    <a href="{% url 'contrats_client:list' %}" class="sonas-btn sonas-btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="space-y-4">
+            <div class="sonas-card p-5">
+                <h2 class="font-bold text-sm mb-3">Biens disponibles</h2>
+                <p class="text-2xl font-extrabold text-indigo-600">{{ biens_eligibles }}</p>
+                <p class="text-xs text-slate-500 mt-1">bien(s) validé(s) sans contrat en cours</p>
+            </div>
+            <div class="sonas-card p-5">
+                <h2 class="font-bold text-sm mb-3">Après envoi</h2>
+                <ol class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                    <li>1. Demande enregistrée (brouillon)</li>
+                    <li>2. Un agent vérifie et active le contrat</li>
+                    <li>3. Vous pouvez déclarer un sinistre</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

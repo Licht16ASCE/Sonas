@@ -1,0 +1,13 @@
+from django.urls import path
+
+from . import views
+
+app_name = 'sinistres'
+
+urlpatterns = [
+    path('', views.sinistre_list, name='list'),
+    path('nouveau/', views.sinistre_create, name='create'),
+    path('<int:pk>/', views.sinistre_detail, name='detail'),
+    path('<int:pk>/statut/', views.sinistre_update_status, name='update_status'),
+    path('<int:pk>/valider/', views.sinistre_validate, name='validate'),
+]

@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="sonas-page-header mb-8">
+    <h1>Tableau de bord</h1>
+    <p>Vue d'ensemble de l'activité SONAS</p>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+    <div class="sonas-card sonas-kpi"><p class="sonas-kpi-label">Clients actifs</p><p class="sonas-kpi-value text-indigo-600">{{ kpis.clients }}</p></div>
+    <div class="sonas-card sonas-kpi"><p class="sonas-kpi-label">Biens</p><p class="sonas-kpi-value">{{ kpis.biens }}</p></div>
+    <div class="sonas-card sonas-kpi"><p class="sonas-kpi-label">Contrats actifs</p><p class="sonas-kpi-value text-emerald-600">{{ kpis.contrats_actifs }}</p></div>
+    <div class="sonas-card sonas-kpi"><p class="sonas-kpi-label">Sinistres en cours</p><p class="sonas-kpi-value text-amber-500">{{ kpis.sinistres_en_cours }}</p></div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6 mb-8">
+    <div class="sonas-card p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="font-bold text-lg">Actions en attente</h2>
+            {% if pending_actions_count %}<span class="sonas-badge sonas-badge-yellow">{{ pending_actions_count }}</span>{% endif %}
+        </div>
+        {% if pending_actions %}
+        <ul class="space-y-3">
+            {% for action in pending_actions %}
+            <li class="flex items-start gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700">
+                <span class="sonas-badge sonas-badge-yellow shrink-0">{{ action.get_action_type_display }}</span>
+                <div class="min-w-0">
+                    <p class="font-semibold text-sm">{{ action.title }}</p>
+                    {% if action.description %}<p class="text-xs text-slate-500 mt-1">{{ action.description }}</p>{% endif %}
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        <a href="{% url 'notifications:pending_actions' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 mt-4 hover:underline">Tout voir →</a>
+        {% else %}
+        <div class="text-center py-8 text-slate-500 text-sm">
+            <svg class="w-12 h-12 mx-auto mb-3 text-emerald-400 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Aucune action en attente
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="sonas-card p-6">
+        <h2 class="font-bold text-lg mb-5">Notifications</h2>
+        {% if notifications_summary %}
+        <ul class="space-y-2">
+            {% for item in notifications_summary %}
+            <li class="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
+                <span class="text-sm font-medium">{{ item.type_notification }}</span>
+                <span class="sonas-badge sonas-badge-blue">{{ item.count }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-slate-500 text-sm py-4">Aucune notification non lue.</p>
+        {% endif %}
+        <a href="{% url 'notifications:list' %}" class="inline-flex items-center gap-1 text-sm font-semibold text-indigo-600 mt-4 hover:underline">Centre de notifications →</a>
+    </div>
+</div>
+
+<div class="mb-4">
+    <h2 class="font-bold mb-3">Sinistres — filtres rapides</h2>
+    {% include 'partials/filter_buttons.html' %}
+</div>
+
+<div class="sonas-card overflow-hidden">
+    <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+        <h2 class="font-bold">Sinistres récents</h2>
+        <a href="{% url 'sinistres:list' %}" class="text-sm font-semibold text-indigo-600 hover:underline">Voir tout</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="sonas-table">
+            <thead><tr>
+                <th>Référence</th><th>Client</th><th>Type</th><th>Statut</th>
+            </tr></thead>
+            <tbody>
+                {% for s in recent_sinistres %}
+                <tr>
+                    <td><a href="{% url 'sinistres:detail' s.pk %}" class="font-semibold text-indigo-600 hover:underline">{{ s.reference }}</a></td>
+                    <td>{{ s.contrat.client.display_name }}</td>
+                    <td>{{ s.get_type_sinistre_display }}</td>
+                    <td><span class="sonas-badge sonas-badge-gray">{{ s.get_statut_display }}</span></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center text-slate-500 py-8">Aucun sinistre.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

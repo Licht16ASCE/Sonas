@@ -1,0 +1,140 @@
+<!-- Navbar liquid glass — sticky, effet prismatique -->
+<header
+  class="fixed top-0 inset-x-0 z-50"
+  x-data="{ open: false, isDark: window.matchMedia('(prefers-color-scheme: dark)').matches, toggle() { this.isDark = !this.isDark; document.documentElement.classList.toggle('dark'); } }"
+  x-init="document.documentElement.classList.toggle('dark', isDark)"
+>
+  <!-- Conteneur principal avec l'effet glass liquide -->
+  <div class="liquid-glass-nav mx-auto mt-4 max-w-7xl rounded-3xl border border-white/20 bg-white/30 backdrop-blur-2xl shadow-2xl shadow-indigo-500/10 dark:bg-slate-900/40 dark:border-white/10">
+    <div class="px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 lg:h-[4.5rem]">
+        <!-- Logo -->
+        <a href="{% url 'core:landing' %}" class="flex items-center gap-2.5 group">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-shadow">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <span class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">SONAS</span>
+        </a>
+
+        <!-- Navigation desktop -->
+        <nav class="hidden lg:flex items-center gap-8">
+          <a href="#features" class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Fonctionnalités</a>
+          <a href="#how-it-works" class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Comment ça marche</a>
+          <a href="#testimonials" class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">Témoignages</a>
+          <a href="#faq" class="text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">FAQ</a>
+        </nav>
+
+        <!-- Actions desktop -->
+        <div class="hidden lg:flex items-center gap-3">
+          <button @click="toggle()" class="p-2 rounded-full glass-btn-icon" aria-label="Thème">
+            <svg x-show="!isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+            </svg>
+            <svg x-show="isDark" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+          </button>
+          <a href="{% url 'accounts:login' %}" class="sonas-btn sonas-btn-ghost sonas-btn-sm">Connexion</a>
+          <a href="{% url 'accounts:register' %}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Démarrer gratuitement</a>
+        </div>
+
+        <!-- Burger mobile -->
+        <button @click="open = !open" class="lg:hidden p-2 rounded-full glass-btn-icon">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Menu mobile -->
+    <div x-show="open" x-cloak x-transition class="lg:hidden border-t border-white/20 dark:border-white/10 bg-white/50 dark:bg-slate-900/50 backdrop-blur-2xl px-4 py-4 space-y-3 rounded-b-3xl">
+      <a href="#features" @click="open=false" class="block py-2 text-sm font-medium text-slate-700 dark:text-slate-300">Fonctionnalités</a>
+      <a href="#how-it-works" @click="open=false" class="block py-2 text-sm font-medium text-slate-700 dark:text-slate-300">Comment ça marche</a>
+      <a href="#faq" @click="open=false" class="block py-2 text-sm font-medium text-slate-700 dark:text-slate-300">FAQ</a>
+      <a href="{% url 'accounts:register' %}" class="sonas-btn sonas-btn-primary w-full">Créer un compte</a>
+      <a href="{% url 'accounts:login' %}" class="sonas-btn sonas-btn-secondary w-full">Connexion</a>
+    </div>
+  </div>
+
+  <!-- Styles pour l'effet liquid glass -->
+  <style>
+    /* Fond animé prismatique – dégradé qui bouge doucement */
+    .liquid-glass-nav {
+      position: relative;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.4) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.4) 100%
+      );
+      background-size: 400% 400%;
+      animation: liquidShimmer 15s ease infinite;
+    }
+    .dark .liquid-glass-nav {
+      background: linear-gradient(
+        135deg,
+        rgba(30, 41, 59, 0.5) 0%,
+        rgba(30, 41, 59, 0.1) 50%,
+        rgba(30, 41, 59, 0.5) 100%
+      );
+      background-size: 400% 400%;
+    }
+
+    @keyframes liquidShimmer {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Surbrillance interne avec un dégradé de bordure */
+    .liquid-glass-nav::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.6) 0%,
+        rgba(99, 102, 241, 0.3) 50%,
+        rgba(255, 255, 255, 0.6) 100%
+      );
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+    .dark .liquid-glass-nav::before {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.15) 0%,
+        rgba(99, 102, 241, 0.2) 50%,
+        rgba(255, 255, 255, 0.15) 100%
+      );
+    }
+
+    /* Boutons icônes en glass */
+    .glass-btn-icon {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      transition: all 0.2s;
+    }
+    .dark .glass-btn-icon {
+      background: rgba(30, 41, 59, 0.6);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .glass-btn-icon:hover {
+      background: rgba(255, 255, 255, 0.8);
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+    }
+    .dark .glass-btn-icon:hover {
+      background: rgba(30, 41, 59, 0.8);
+    }
+  </style>
+</header>

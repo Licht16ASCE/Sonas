@@ -1,0 +1,41 @@
+<aside
+  class="hidden lg:flex flex-col shrink-0 sonas-card border-0 border-r rounded-none min-h-screen transition-all duration-200"
+  :class="collapsed ? 'w-[4.5rem]' : 'w-64'"
+  x-data="{ collapsed: JSON.parse(localStorage.getItem('sonas-sidebar-collapsed') || 'false') }"
+  x-init="$watch('collapsed', v => localStorage.setItem('sonas-sidebar-collapsed', JSON.stringify(v)))"
+>
+    <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+        <a href="{% url 'core_internal:dashboard' %}" class="flex items-center gap-2.5 min-w-0" x-show="!collapsed">
+            <div class="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-red-600 to-rose-500 flex items-center justify-center shadow-md shadow-red-500/20">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <span class="text-lg font-extrabold tracking-tight">SONAS</span>
+        </a>
+        <button type="button" @click="collapsed = !collapsed" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 ml-auto">
+            <svg class="w-4 h-4 text-slate-500 transition-transform" :class="collapsed && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+        </button>
+    </div>
+    <p class="px-5 pt-3 text-xs text-slate-500 font-medium" x-show="!collapsed">Administration technique</p>
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto">
+        <a href="{% url 'core_internal:dashboard' %}" class="sonas-sidebar-link" title="Dashboard technique">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span x-show="!collapsed">Dashboard technique</span>
+        </a>
+        <a href="/{{ admin_url }}auth/user/" class="sonas-sidebar-link" title="Utilisateurs">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <span x-show="!collapsed">Utilisateurs</span>
+        </a>
+        <a href="{% url 'core_internal:system' %}" class="sonas-sidebar-link" title="Gestion système">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
+            <span x-show="!collapsed">Gestion système</span>
+        </a>
+        <a href="{% url 'core_internal:logs' %}" class="sonas-sidebar-link" title="Logs">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span x-show="!collapsed">Logs</span>
+        </a>
+        <a href="/{{ admin_url }}" class="sonas-sidebar-link" title="Admin secure">
+            <svg class="w-5 h-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span x-show="!collapsed">Admin secure</span>
+        </a>
+    </nav>
+</aside>

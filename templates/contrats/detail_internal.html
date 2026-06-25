@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}{{ contrat.reference }}{% endblock %}
+{% block content %}
+<div class="mb-6">
+    <a href="{% url 'contrats:list' %}" class="text-sonas-blue text-sm">← Contrats</a>
+    <h1 class="text-2xl font-bold mt-1">{{ contrat.reference }}</h1>
+    <p class="text-gray-500">Client : {{ contrat.client.display_name }}</p>
+</div>
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+        <dl class="space-y-2 text-sm">
+            <div><dt class="text-gray-500">Bien</dt><dd>{{ contrat.bien.reference }}</dd></div>
+            <div><dt class="text-gray-500">Période</dt><dd>{{ contrat.date_debut|date:"d/m/Y" }} → {{ contrat.date_fin|date:"d/m/Y" }}</dd></div>
+            <div><dt class="text-gray-500">Statut</dt><dd>{{ contrat.get_statut_display }}</dd></div>
+        </dl>
+        {% if contrat.statut == 'BROUILLON' %}
+        <form method="post" action="{% url 'contrats:activate' contrat.pk %}" class="mt-4">{% csrf_token %}<button class="btn-primary">Activer le contrat</button></form>
+        {% endif %}
+    </div>
+    <div class="card p-6">
+        <h2 class="font-semibold mb-3">Sinistres liés</h2>
+        {% for s in sinistres %}<p class="text-sm"><a href="{% url 'sinistres:detail' s.pk %}" class="text-sonas-blue">{{ s.reference }}</a> — {{ s.get_statut_display }}</p>{% empty %}<p class="text-gray-500 text-sm">Aucun sinistre.</p>{% endfor %}
+    </div>
+</div>
+{% endblock %}

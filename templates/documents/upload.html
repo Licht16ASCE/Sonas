@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Uploader un document{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+    <div class="sonas-page-header mb-8">
+        <h1>Uploader un document</h1>
+        {% if link_mode == 'bien' %}
+        <p>Justificatif associé au bien <strong>{{ bien.reference }}</strong></p>
+        {% elif link_mode == 'sinistre' %}
+        <p>Pièce jointe associée au sinistre <strong>{{ sinistre.reference }}</strong></p>
+        {% else %}
+        <p>Associez le fichier à <strong>un de vos biens</strong> ou <strong>un de vos sinistres</strong>.</p>
+        {% endif %}
+    </div>
+
+    {% if link_mode == 'both' %}
+    <div class="mb-6 sonas-card p-4 border-l-4 border-l-indigo-400">
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+            <strong class="text-slate-900 dark:text-white">Bien :</strong> titre de propriété, bail, diagnostics… (validation du bien)<br>
+            <strong class="text-slate-900 dark:text-white">Sinistre :</strong> photos, devis, constat… (traitement du dossier)
+        </p>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" class="sonas-card p-6 space-y-5">
+        {% csrf_token %}
+        {% if sinistre %}<input type="hidden" name="sinistre_id" value="{{ sinistre.pk }}">{% endif %}
+        {% if bien %}<input type="hidden" name="bien_id" value="{{ bien.pk }}">{% endif %}
+
+        {% for field in form %}
+        <div>
+            <label class="sonas-label">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors.0 }}</p>{% endif %}
+        </div>
+        {% endfor %}
+
+        {% if form.non_field_errors %}
+        <div class="text-sm text-red-600">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <div class="flex flex-wrap gap-3 pt-2">
+            <button type="submit" class="sonas-btn sonas-btn-primary">Envoyer le document</button>
+            <a href="{% if user.is_client %}{% url 'documents_client:list' %}{% else %}{% url 'documents:list' %}{% endif %}" class="sonas-btn sonas-btn-secondary">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+    <div class="sonas-page-header mb-8">
+        <h1>{{ title }}</h1>
+        <p>Sélectionnez un contrat actif — seuls vos biens couverts sont listés.</p>
+    </div>
+    <form method="post" class="sonas-card p-6 space-y-4">
+        {% csrf_token %}
+        {% for field in form %}
+        <div>
+            <label class="sonas-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors.0 }}</p>{% endif %}
+        </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+        <div class="text-sm text-red-600">{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+        <button type="submit" class="sonas-btn sonas-btn-warning">Déclarer</button>
+    </form>
+</div>
+{% endblock %}

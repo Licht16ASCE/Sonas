@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Créer un compte{% endblock %}
+{% block content_public %}
+<div class="min-h-screen landing-mesh flex">
+    <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center p-12">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/90 via-indigo-700/95 to-purple-900"></div>
+        <div class="relative text-white max-w-md">
+            <h2 class="text-3xl font-extrabold mb-4 leading-tight">Rejoignez SONAS</h2>
+            <p class="text-indigo-100 leading-relaxed mb-8">Créez votre espace client pour déclarer vos biens, souscrire des contrats et suivre vos sinistres en ligne.</p>
+            <ul class="space-y-3 text-sm text-indigo-100">
+                <li class="flex items-center gap-2"><svg class="w-5 h-5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Inscription gratuite</li>
+                <li class="flex items-center gap-2"><svg class="w-5 h-5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Déclaration de biens en quelques clics</li>
+                <li class="flex items-center gap-2"><svg class="w-5 h-5 text-emerald-400 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg> Suivi des sinistres en temps réel</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="flex-1 flex items-center justify-center p-6 sm:p-12">
+        <div class="w-full max-w-lg">
+            <div class="lg:hidden mb-8 text-center">
+                <a href="{% url 'core:landing' %}" class="inline-flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg></div>
+                    <span class="text-xl font-extrabold">SONAS</span>
+                </a>
+            </div>
+            <div class="sonas-card p-8 sm:p-10">
+                <h1 class="text-2xl font-extrabold tracking-tight mb-1">Créer un compte client</h1>
+                <p class="text-slate-500 text-sm mb-8">Réservé aux particuliers et propriétaires. Les comptes agents sont créés par votre gérant.</p>
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div class="grid sm:grid-cols-2 gap-4">
+                        {% for field in form %}
+                        <div class="{% if field.name == 'adresse' %}sm:col-span-2{% endif %}">
+                            <label class="sonas-label">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</label>
+                            {{ field }}
+                            {% if field.errors %}<p class="text-red-500 text-sm mt-1.5">{{ field.errors.0 }}</p>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if form.non_field_errors %}
+                    <div class="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 text-sm">{{ form.non_field_errors.0 }}</div>
+                    {% endif %}
+                    <button type="submit" class="sonas-btn sonas-btn-primary w-full py-3.5 sonas-btn-lg">Créer mon compte</button>
+                </form>
+                <p class="text-center text-sm text-slate-500 mt-8">
+                    Déjà inscrit ?
+                    <a href="{% url 'accounts:login' %}" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Se connecter</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

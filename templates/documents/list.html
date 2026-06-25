@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Documents{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1>{% if user.is_client %}Mes documents{% else %}Documents{% endif %}</h1>
+        <p>Justificatifs liés à vos biens et pièces jointes de vos sinistres</p>
+    </div>
+    <a href="{% if user.is_client %}{% url 'documents_client:upload' %}{% else %}{% url 'documents:upload' %}{% endif %}" class="sonas-btn sonas-btn-primary">Uploader</a>
+</div>
+<div class="sonas-card overflow-hidden">
+    <table class="sonas-table">
+        <thead><tr>
+            <th>Titre</th>
+            <th>Type</th>
+            <th>Associé à</th>
+            <th>Date</th>
+        </tr></thead>
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td><a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank">{{ doc.titre }}</a></td>
+                <td>{{ doc.get_type_document_display }}</td>
+                <td>
+                    {% if doc.sinistre %}
+                    <span class="sonas-badge sonas-badge-yellow">Sinistre</span>
+                    {{ doc.sinistre.reference }}
+                    {% elif doc.bien %}
+                    <span class="sonas-badge sonas-badge-blue">Bien</span>
+                    {{ doc.bien.reference }}
+                    {% else %}—{% endif %}
+                </td>
+                <td class="text-slate-500">{{ doc.created_at|date:"d/m/Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="p-8 text-center text-slate-500">Aucun document.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Contrats{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1>{% if user.is_client %}Mes contrats{% else %}Contrats{% endif %}</h1>
+        <p>{% if user.is_client %}Vos souscriptions et contrats actifs{% else %}Création et activation contractuelle{% endif %}</p>
+    </div>
+    {% if user.is_client %}
+    <a href="{% url 'contrats_client:create' %}" class="sonas-btn sonas-btn-primary">Souscrire un contrat</a>
+    {% else %}
+    <a href="{% url 'contrats:create' %}" class="sonas-btn sonas-btn-primary">Nouveau contrat</a>
+    {% endif %}
+</div>
+{% if not user.is_client %}{% include 'partials/filter_buttons.html' %}{% endif %}
+<div class="sonas-card overflow-hidden">
+    <table class="sonas-table">
+        <thead><tr>
+            <th>Référence</th>
+            {% if not user.is_client %}<th>Client</th>{% endif %}
+            <th>Bien</th>
+            <th>Fin</th>
+            <th>Statut</th>
+            <th></th>
+        </tr></thead>
+        <tbody>
+            {% for c in contrats %}
+            <tr>
+                <td class="font-medium">{{ c.reference }}</td>
+                {% if not user.is_client %}<td>{{ c.client.display_name }}</td>{% endif %}
+                <td>{{ c.bien.reference }}</td>
+                <td>{{ c.date_fin|date:"d/m/Y" }}{% if c.jours_restants <= 30 and c.statut == 'ACTIF' %} <span class="sonas-badge sonas-badge-yellow">J-{{ c.jours_restants }}</span>{% endif %}</td>
+                <td><span class="sonas-badge sonas-badge-{% if c.statut == 'ACTIF' %}green{% elif c.statut == 'EXPIRE' %}red{% else %}gray{% endif %}">{{ c.get_statut_display }}</span></td>
+                <td><a href="{% if user.is_client %}{% url 'contrats_client:detail' c.pk %}{% else %}{% url 'contrats:detail' c.pk %}{% endif %}" class="text-indigo-600 hover:underline font-medium">Voir</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="p-8 text-center text-slate-500">Aucun contrat.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}{{ bien.reference }}{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+    <div>
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+            <h1>{{ bien.reference }}</h1>
+            <span class="sonas-badge sonas-badge-{% if bien.statut == 'VALIDE' %}green{% elif bien.statut == 'REJETE' %}red{% else %}yellow{% endif %}">
+                {{ bien.get_statut_display }}
+            </span>
+        </div>
+        <p>{{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}</p>
+    </div>
+    <a href="{% url 'biens_client:list' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Mes biens</a>
+</div>
+
+{% if bien.statut == 'EN_ATTENTE' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20">
+    <p class="font-semibold text-amber-800 dark:text-amber-200">Validation en cours</p>
+    <p class="text-sm text-amber-700/80 dark:text-amber-300/70 mt-1">Ajoutez vos documents pour compléter le dossier. Un agent examinera votre déclaration.</p>
+</div>
+{% elif bien.statut == 'REJETE' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
+    <p class="font-semibold text-red-800 dark:text-red-200">Bien refusé</p>
+    {% if bien.motif_rejet %}<p class="text-sm mt-1">{{ bien.motif_rejet }}</p>{% endif %}
+</div>
+{% elif bien.statut == 'VALIDE' and peut_souscrire %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">
+    <p class="font-semibold text-emerald-800 dark:text-emerald-200">Bien validé — vous pouvez souscrire un contrat</p>
+    <a href="{% url 'contrats_client:create' %}" class="sonas-btn sonas-btn-primary sonas-btn-sm mt-3">Souscrire un contrat</a>
+</div>
+{% endif %}
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Caractéristiques</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Type</dt><dd class="font-medium">{{ bien.get_type_bien_display }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Surface</dt><dd class="font-medium">{% if bien.surface_m2 %}{{ bien.surface_m2 }} m²{% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Déclaré le</dt><dd class="font-medium">{{ bien.created_at|date:"d/m/Y" }}</dd></div>
+            {% if bien.description %}
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <dt class="text-slate-500 mb-1">Description</dt>
+                <dd class="text-slate-700 dark:text-slate-300">{{ bien.description }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% if user.is_client %}
+        <a href="{% url 'documents_client:upload' %}?bien={{ bien.pk }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-5">Ajouter un document</a>
+        {% endif %}
+    </div>
+
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Documents ({{ bien.documents.count }})</h2>
+        {% if bien.documents.all %}
+        <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+            {% for doc in bien.documents.all %}
+            <li class="py-3 flex justify-between items-center gap-3 text-sm">
+                <a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium truncate" target="_blank">{{ doc.titre }}</a>
+                <span class="text-slate-400 shrink-0">{{ doc.created_at|date:"d/m/Y" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-slate-500 mb-4">Aucun document. Les justificatifs accélèrent la validation.</p>
+        {% if user.is_client %}
+        <a href="{% url 'documents_client:upload' %}?bien={{ bien.pk }}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Uploader un document</a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+{% if show_next_steps and user.is_client %}
+<div class="mt-6 sonas-card p-6">
+    <h2 class="font-bold mb-4">Étapes suivantes</h2>
+    <div class="grid sm:grid-cols-4 gap-4 text-center text-sm">
+        <div class="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/30">
+            <p class="font-semibold">Déclaration</p>
+            <p class="text-slate-500 text-xs mt-1">Effectuée</p>
+        </div>
+        <div class="p-3 rounded-xl {% if bien.documents.count %}bg-indigo-50 dark:bg-indigo-950/30{% else %}bg-slate-50 dark:bg-slate-800/50{% endif %}">
+            <p class="font-semibold">Documents</p>
+            <p class="text-slate-500 text-xs mt-1">{% if bien.documents.count %}{{ bien.documents.count }} fichier(s){% else %}À compléter{% endif %}</p>
+        </div>
+        <div class="p-3 rounded-xl {% if bien.statut == 'VALIDE' %}bg-emerald-50 dark:bg-emerald-950/30{% endif %}">
+            <p class="font-semibold">Validation</p>
+            <p class="text-slate-500 text-xs mt-1">{{ bien.get_statut_display }}</p>
+        </div>
+        <div class="p-3 rounded-xl {% if contrat_actif %}bg-emerald-50 dark:bg-emerald-950/30{% endif %}">
+            <p class="font-semibold">Contrat</p>
+            <p class="text-slate-500 text-xs mt-1">{% if contrat_actif %}{{ contrat_actif.get_statut_display }}{% elif peut_souscrire %}Disponible{% else %}—{% endif %}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ sinistre.reference }}{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-2">{{ sinistre.reference }}</h1>
+<p class="text-gray-500 mb-6">{{ sinistre.get_type_sinistre_display }} — {{ sinistre.get_statut_display }}</p>
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="card p-6">
+        <p class="text-sm mb-4">{{ sinistre.description }}</p>
+        <dl class="text-sm space-y-2">
+            <div><dt class="text-gray-500">Date sinistre</dt><dd>{{ sinistre.date_sinistre|date:"d/m/Y" }}</dd></div>
+            <div><dt class="text-gray-500">Contrat</dt><dd>{{ sinistre.contrat.reference }}</dd></div>
+        </dl>
+        <a href="{% url 'documents_client:upload' %}?sinistre={{ sinistre.pk }}" class="btn-secondary mt-4 inline-block">Ajouter un document</a>
+    </div>
+    <div class="card p-6">
+        <h2 class="font-semibold mb-3">Documents</h2>
+        {% for doc in sinistre.documents.all %}<p class="text-sm"><a href="{{ doc.fichier.url }}" class="text-sonas-blue" target="_blank">{{ doc.titre }}</a></p>{% empty %}<p class="text-gray-500 text-sm">Aucun document — action requise.</p>{% endfor %}
+    </div>
+</div>
+{% endblock %}
