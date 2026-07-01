@@ -9,7 +9,8 @@ Post : blocage sinistres
 from celery import shared_task
 from django.utils import timezone
 
-from notifications.services import create_notification, create_pending_action
+from notifications.models import ActionType
+from notifications.services import STAFF_ROLES_ALL, create_notification, create_pending_action, notify_staff
 
 
 @shared_task
@@ -68,6 +69,17 @@ def check_contract_expirations():
                 title=f'Renouveler le contrat {contrat.reference}',
                 description=f'Expiration dans {jours} jours.',
                 obj=contrat,
+            )
+            notify_staff(
+                roles=STAFF_ROLES_ALL,
+                notif_type='CONTRAT_EXPIRATION',
+                title=f'Contrat {contrat.reference} expire dans 7 jours',
+                message=f'Client {contrat.client.display_name} — renouvellement à prévoir.',
+                obj=contrat,
+                priority='high',
+                pending_action_type=ActionType.CONTRAT_EXPIRATION,
+                pending_title=f'Renouveler le contrat {contrat.reference}',
+                pending_description=f'Client : {contrat.client.display_name}',
             )
             contrat.alerte_j7_envoyee = True
             contrat.save(update_fields=['alerte_j7_envoyee'])

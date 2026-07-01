@@ -8,7 +8,12 @@ from notifications.services import resolve_pending_for_object
 from sinistres.models import Sinistre
 from biens.models import Bien
 from .forms import DocumentUploadForm
-from .models import Document
+from .models import Document, DocumentType
+from .services import (
+    filter_internal_documents,
+    get_document_filter_clients,
+    get_internal_documents_queryset,
+)
 
 
 def _user_can_access_sinistre(user, sinistre):
@@ -68,7 +73,7 @@ def document_upload(request):
             doc.save()
 
             if doc.sinistre_id:
-                resolve_pending_for_object(doc.sinistre)
+                resolve_pending_for_object(doc.sinistre, action_type='SINISTRE_INCOMPLET')
                 if request.user.is_client:
                     log_client_activity(
                         request.user.client_profile,
@@ -82,7 +87,8 @@ def document_upload(request):
                 return redirect('sinistres:detail', pk=doc.sinistre_id)
 
             if doc.bien_id:
-                resolve_pending_for_object(doc.bien)
+                resolve_pending_for_object(doc.bien, action_type='BIEN_INCOMPLET')
+                resolve_pending_for_object(doc.bien, action_type='DOCUMENTS_MANQUANTS')
                 if request.user.is_client:
                     log_client_activity(
                         request.user.client_profile,
@@ -108,11 +114,35 @@ def document_upload(request):
             link_mode=link_mode,
         )
 
+    if link_mode == 'bien':
+        guide_steps = [
+            'Sélectionner le type de document',
+            'Joindre le fichier',
+            'Validation par un agent',
+        ]
+        guide_tip = 'Formats acceptés : PDF, images (JPG, PNG). Titre de propriété, bail, diagnostics…'
+    elif link_mode == 'sinistre':
+        guide_steps = [
+            'Sélectionner le type de pièce',
+            'Joindre photos ou devis',
+            'Instruction du dossier',
+        ]
+        guide_tip = 'Formats acceptés : PDF, images (JPG, PNG). Photos, devis, constats amiables…'
+    else:
+        guide_steps = [
+            'Choisir bien ou sinistre',
+            'Sélectionner le type',
+            'Envoyer le fichier',
+        ]
+        guide_tip = 'Formats acceptés : PDF, images (JPG, PNG). Taille maximale selon la configuration du serveur.'
+
     return render(request, 'documents/upload.html', {
         'form': form,
         'sinistre': sinistre,
         'bien': bien,
         'link_mode': link_mode,
+        'guide_steps': guide_steps,
+        'guide_tip': guide_tip,
     })
 
 
@@ -121,11 +151,33 @@ def document_list(request):
     if request.user.is_client:
         client = request.user.client_profile
         docs = Document.objects.filter(
-            models.Q(sinistre__contrat__client=client) | models.Q(bien__client=client)
-        ).select_related('sinistre', 'sinistre__contrat', 'bien')
+            models.Q(sinistre__contrat__client=client)
+            | models.Q(bien__client=client)
+            | models.Q(contrat__client=client)
+        ).select_related('sinistre', 'sinistre__contrat', 'bien', 'contrat')
+        context = {'documents': docs, 'is_internal_list': False}
     else:
-        docs = Document.objects.select_related(
-            'sinistre', 'sinistre__contrat', 'bien', 'bien__client'
-        ).all()
+        client_id = request.GET.get('client', '').strip()
+        type_document = request.GET.get('type', '').strip()
+        search = request.GET.get('q', '').strip()
 
-    return render(request, 'documents/list.html', {'documents': docs})
+        docs = get_internal_documents_queryset()
+        docs = filter_internal_documents(
+            docs,
+            client_id=client_id or None,
+            type_document=type_document or None,
+            search=search,
+        )
+
+        context = {
+            'documents': docs,
+            'is_internal_list': True,
+            'filter_clients': get_document_filter_clients(),
+            'document_types': DocumentType.choices,
+            'active_client': client_id,
+            'active_type': type_document,
+            'search': search,
+            'results_count': docs.count(),
+        }
+
+    return render(request, 'documents/list.html', context)

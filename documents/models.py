@@ -11,7 +11,9 @@ from sinistres.models import Sinistre
 def document_upload_path(instance, filename):
     ext = os.path.splitext(filename)[1]
     folder = 'misc'
-    if instance.sinistre_id:
+    if instance.contrat_id:
+        folder = f'contrats/{instance.contrat_id}'
+    elif instance.sinistre_id:
         folder = f'sinistres/{instance.sinistre_id}'
     elif instance.bien_id:
         folder = f'biens/{instance.bien_id}'
@@ -34,6 +36,13 @@ class Document(models.Model):
     )
     bien = models.ForeignKey(
         Bien, on_delete=models.CASCADE, null=True, blank=True, related_name='documents'
+    )
+    contrat = models.ForeignKey(
+        'contrats.Contrat',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='documents',
     )
     type_document = models.CharField(max_length=20, choices=DocumentType.choices, default=DocumentType.JUSTIFICATIF)
     titre = models.CharField(max_length=200)
@@ -62,11 +71,38 @@ class Document(models.Model):
 
     def clean(self):
         from django.core.exceptions import ValidationError
-        if not self.sinistre and not self.bien:
-            raise ValidationError('Un document doit être lié à un sinistre ou un bien.')
+        links = sum(bool(x) for x in (self.sinistre, self.bien, self.contrat))
+        if links == 0:
+            raise ValidationError('Un document doit être lié à un sinistre, un bien ou un contrat.')
+        if links > 1:
+            raise ValidationError('Un document ne peut être lié qu\'à une seule entité.')
 
     @property
     def linked_entity_type(self):
+        if self.contrat_id:
+            return 'contrat'
         if self.sinistre_id:
             return 'sinistre'
-        return 'bien'
+        if self.bien_id:
+            return 'bien'
+        return None
+
+    @property
+    def client(self):
+        if self.contrat_id:
+            return self.contrat.client
+        if self.sinistre_id:
+            return self.sinistre.client
+        if self.bien_id:
+            return self.bien.client
+        return None
+
+    @property
+    def linked_reference(self):
+        if self.contrat_id:
+            return self.contrat.reference
+        if self.sinistre_id:
+            return self.sinistre.reference
+        if self.bien_id:
+            return self.bien.reference
+        return None

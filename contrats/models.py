@@ -10,8 +10,10 @@ from clients.models import Client
 class ContratStatut(models.TextChoices):
     BROUILLON = 'BROUILLON', 'Brouillon'
     ACTIF = 'ACTIF', 'Actif'
+    INACTIF = 'INACTIF', 'Inactif'
     EXPIRE = 'EXPIRE', 'Expiré'
     RESILIE = 'RESILIE', 'Résilié'
+    EPUISE = 'EPUISE', 'Inactif'  # rétrocompatibilité — migré vers INACTIF
 
 
 class Contrat(models.Model):
@@ -24,8 +26,20 @@ class Contrat(models.Model):
     date_fin = models.DateField()
     statut = models.CharField(max_length=15, choices=ContratStatut.choices, default=ContratStatut.BROUILLON)
     montant_annuel = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    plafond_indemnisation = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='Plafond total d\'indemnisation du contrat.',
+    )
+    montant_indemnise_cumule = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        help_text='Montant total déjà indemnisé sur ce contrat.',
+    )
     notes = models.TextField(blank=True)
-    # Suivi expiration
+    date_souscription = models.DateTimeField(null=True, blank=True)
     alerte_j30_envoyee = models.BooleanField(default=False)
     alerte_j15_envoyee = models.BooleanField(default=False)
     alerte_j7_envoyee = models.BooleanField(default=False)
@@ -59,6 +73,42 @@ class Contrat(models.Model):
     def can_declare_sinistre(self):
         return self.statut == ContratStatut.ACTIF and not self.sinistres_bloques
 
+    @property
+    def is_inactif(self):
+        return self.statut in (ContratStatut.INACTIF, ContratStatut.EPUISE)
+
+    @property
+    def plafond_disponible(self):
+        from decimal import Decimal
+        plafond = self.plafond_indemnisation or Decimal('0')
+        utilise = self.montant_indemnise_cumule or Decimal('0')
+        reste = plafond - utilise
+        return reste if reste > 0 else Decimal('0')
+
+    @property
+    def plafond_epuise(self):
+        from decimal import Decimal
+        if not self.plafond_indemnisation:
+            return False
+        return self.plafond_disponible <= Decimal('0')
+
+    def deduire_indemnisation(self, montant):
+        """Déduit un montant indemnisé du plafond contractuel."""
+        from decimal import Decimal
+        montant = Decimal(str(montant))
+        self.montant_indemnise_cumule = (self.montant_indemnise_cumule or Decimal('0')) + montant
+        self.save(update_fields=['montant_indemnise_cumule', 'updated_at'])
+
+    def invalider_plafond(self, motif=''):
+        """Passe le contrat en inactif après dépassement ou épuisement du plafond."""
+        self.statut = ContratStatut.INACTIF
+        self.sinistres_bloques = True
+        if motif:
+            prefix = f'[{motif}] '
+            self.notes = f'{prefix}{self.notes}'.strip() if self.notes else prefix.strip()
+        self.save(update_fields=['statut', 'sinistres_bloques', 'notes', 'updated_at'])
+        return True
+
     def check_and_update_expiration(self):
         """Met à jour le statut et bloque les sinistres post-expiration."""
         today = date.today()
@@ -83,3 +133,7 @@ class Contrat(models.Model):
         if jours == 0:
             return 'J0'
         return 'POST'
+
+    @property
+    def document_contractuel(self):
+        return self.documents.filter(type_document='CONTRAT_PDF').order_by('-created_at').first()

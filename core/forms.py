@@ -21,7 +21,9 @@ def apply_form_styles(form):
         widget = field.widget
         if isinstance(widget, INPUT_WIDGETS):
             cls = widget.attrs.get('class', '')
-            if 'form-input' not in cls:
-                widget.attrs['class'] = f'{cls} form-input'.strip()
+            if 'form-input' not in cls and 'sonas-input' not in cls:
+                widget.attrs['class'] = f'{cls} sonas-input form-input'.strip()
         if isinstance(widget, forms.CheckboxInput):
-            widget.attrs['class'] = 'rounded border-gray-300'
+            widget.attrs['class'] = 'rounded border-slate-300 text-indigo-600 focus:ring-indigo-500'
+        if isinstance(widget, forms.RadioSelect):
+            widget.attrs['class'] = 'space-y-2'
