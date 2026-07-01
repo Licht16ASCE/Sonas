@@ -4,9 +4,72 @@ Regroupement intelligent pour éviter le spam.
 """
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count
+from django.urls import reverse
 from django.utils import timezone
 
+from accounts.models import User, UserRole
 from .models import ActionEnAttente, ActionType, Notification, NotificationPriority, NotificationType
+
+STAFF_ROLES_AGENTS = (UserRole.AGENT,)
+STAFF_ROLES_GERANTS = (UserRole.GERANT, UserRole.ADMIN)
+STAFF_ROLES_ALL = (UserRole.AGENT, UserRole.GERANT, UserRole.ADMIN)
+
+_OBJECT_ROUTES = {
+    'bien': ('biens_client:detail', 'biens:detail'),
+    'contrat': ('contrats_client:detail', 'contrats:detail'),
+    'sinistre': ('sinistres_client:detail', 'sinistres:detail'),
+}
+
+
+def get_staff_users(roles=STAFF_ROLES_ALL):
+    return User.objects.filter(role__in=roles, is_active=True)
+
+
+def get_content_object_url(user, obj):
+    if obj is None:
+        return ''
+    model = obj._meta.model_name
+    routes = _OBJECT_ROUTES.get(model)
+    if not routes:
+        return ''
+    client_route, internal_route = routes
+    route_name = client_route if user.is_client else internal_route
+    return reverse(route_name, args=[obj.pk])
+
+
+def notify_staff(
+    *,
+    roles=STAFF_ROLES_ALL,
+    notif_type=NotificationType.ACTION_PENDING,
+    title,
+    message,
+    obj=None,
+    priority='normal',
+    pending_action_type=None,
+    pending_title='',
+    pending_description='',
+    exclude_user=None,
+):
+    """Crée notifications et actions en attente pour le personnel interne."""
+    for user in get_staff_users(roles):
+        if exclude_user and user.pk == exclude_user.pk:
+            continue
+        create_notification(
+            user,
+            notif_type,
+            title,
+            message,
+            obj=obj,
+            priority=priority,
+        )
+        if pending_action_type and pending_title and obj is not None:
+            create_pending_action(
+                user,
+                pending_action_type,
+                pending_title,
+                pending_description,
+                obj=obj,
+            )
 
 
 def create_notification(user, notif_type, title, message, obj=None, priority='normal', digest_key=''):
@@ -99,7 +162,25 @@ def get_grouped_notifications_summary(user):
     """Résumé regroupé pour le dashboard."""
     unread = Notification.objects.filter(user=user, is_read=False)
     grouped = unread.values('type_notification').annotate(count=Count('id'))
-    return list(grouped)
+    labels = dict(NotificationType.choices)
+    return [
+        {
+            'type_notification': row['type_notification'],
+            'type_label': labels.get(row['type_notification'], row['type_notification']),
+            'count': row['count'],
+        }
+        for row in grouped
+    ]
+
+
+def resolve_pending_action(pk, user):
+    """Marque une action en attente comme résolue pour l'utilisateur."""
+    updated = ActionEnAttente.objects.filter(
+        pk=pk,
+        user=user,
+        is_resolved=False,
+    ).update(is_resolved=True, resolved_at=timezone.now())
+    return updated > 0
 
 
 def mark_all_read(user):

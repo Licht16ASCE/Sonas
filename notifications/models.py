@@ -61,6 +61,9 @@ class ActionType(models.TextChoices):
     DOCUMENTS_MANQUANTS = 'DOCUMENTS_MANQUANTS', 'Documents manquants'
     BIEN_INCOMPLET = 'BIEN_INCOMPLET', 'Bien incomplet'
     CONTRAT_EXPIRATION = 'CONTRAT_EXPIRATION', 'Renouvellement contrat'
+    BIEN_A_VALIDER = 'BIEN_A_VALIDER', 'Bien à valider'
+    SINISTRE_A_TRAITER = 'SINISTRE_A_TRAITER', 'Sinistre à traiter'
+    SINISTRE_A_VALIDER = 'SINISTRE_A_VALIDER', 'Sinistre à valider'
 
 
 class ActionEnAttente(models.Model):

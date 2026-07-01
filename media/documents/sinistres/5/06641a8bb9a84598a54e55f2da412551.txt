@@ -1,0 +1,28 @@
+SONAS — RAPPORT D'INDEMNISATION
+==================================================
+Référence rapport : 
+Référence sinistre : SIN-E5BEFAF8
+Contrat : CTR-E909C3C7
+Client : Jean Dupont
+Bien : BIEN-40B8FDDC — Lubumbashi
+Type de sinistre : Incendie
+Date du sinistre : 28/06/2026
+Date de génération : 01/07/2026 13:24
+
+--- MONTANTS ---
+Montant demandé : 5000.00 €
+Plafond sinistre : 50000.00 €
+Plafond contrat disponible (avant) : 50000.00 €
+Montant indemnisé : 5000.00 €
+Montant non couvert : 0.00 €
+Plafond contrat disponible (après) : 45000.00 €
+
+--- DÉCISION CONTRACTUELLE ---
+Dépassement de plafond détecté : NON
+Le contrat reste actif.
+
+--- DESCRIPTION DU SINISTRE ---
+Fuite de gaz, court circuit
+
+Ce document constitue la copie officielle du rapport d'indemnisation.
+SONAS — Service indemnisation

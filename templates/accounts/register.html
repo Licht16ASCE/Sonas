@@ -4,7 +4,11 @@
 <div class="min-h-screen landing-mesh flex">
     <div class="hidden lg:flex lg:w-1/2 relative overflow-hidden items-center justify-center p-12">
         <div class="absolute inset-0 bg-gradient-to-br from-indigo-600/90 via-indigo-700/95 to-purple-900"></div>
+        <div class="absolute inset-0 opacity-30" style="background-image: url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.08\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
         <div class="relative text-white max-w-md">
+            <div class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur flex items-center justify-center mb-8">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+            </div>
             <h2 class="text-3xl font-extrabold mb-4 leading-tight">Rejoignez SONAS</h2>
             <p class="text-indigo-100 leading-relaxed mb-8">Créez votre espace client pour déclarer vos biens, souscrire des contrats et suivre vos sinistres en ligne.</p>
             <ul class="space-y-3 text-sm text-indigo-100">
@@ -46,6 +50,9 @@
                 <p class="text-center text-sm text-slate-500 mt-8">
                     Déjà inscrit ?
                     <a href="{% url 'accounts:login' %}" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Se connecter</a>
+                </p>
+                <p class="text-center text-sm text-slate-500 mt-3">
+                    <a href="{% url 'core:landing' %}" class="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline">Retour à l'accueil</a>
                 </p>
             </div>
         </div>

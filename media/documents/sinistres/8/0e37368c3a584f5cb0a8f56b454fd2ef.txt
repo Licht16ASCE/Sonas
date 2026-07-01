@@ -1,0 +1,28 @@
+SONAS — RAPPORT D'INDEMNISATION
+==================================================
+Référence rapport : 
+Référence sinistre : SIN-8DB899AF
+Contrat : CTR-63D67892
+Client : Jean Dupont
+Bien : BIEN-C054075F — Lubumbashi
+Type de sinistre : Tempête
+Date du sinistre : 29/06/2026
+Date de génération : 01/07/2026 14:04
+
+--- MONTANTS ---
+Montant demandé : 30000.00 €
+Plafond sinistre : 34800.00 €
+Plafond contrat disponible (avant) : 34800.00 €
+Montant indemnisé : 30000.00 €
+Montant non couvert : 0.00 €
+Plafond contrat disponible (après) : 4800.00 €
+
+--- DÉCISION CONTRACTUELLE ---
+Dépassement de plafond détecté : NON
+Le contrat reste actif.
+
+--- DESCRIPTION DU SINISTRE ---
+Destruction de la toiture
+
+Ce document constitue la copie officielle du rapport d'indemnisation.
+SONAS — Service indemnisation

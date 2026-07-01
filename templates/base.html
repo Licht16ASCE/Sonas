@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link rel="stylesheet" href="{% static 'css/sonas.css' %}">
+    <link rel="stylesheet" href="{% static 'css/sonas.css' %}?v=20250624">
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -32,7 +32,36 @@
 <body class="text-slate-900 dark:text-slate-100 antialiased">
     {% block body %}
     {% if user.is_authenticated %}
-        <div class="sonas-app-bg flex min-h-screen">
+        <div
+            class="sonas-app-bg flex min-h-screen"
+            x-data="{
+                mobileNavOpen: false,
+                collapsed: JSON.parse(localStorage.getItem('sonas-sidebar-collapsed') || 'false'),
+                init() {
+                    const syncLayout = () => {
+                        if (window.innerWidth < 1024) {
+                            this.collapsed = false;
+                        }
+                    };
+                    syncLayout();
+                    window.addEventListener('resize', syncLayout);
+                    this.$watch('collapsed', v => {
+                        if (window.innerWidth >= 1024) {
+                            localStorage.setItem('sonas-sidebar-collapsed', JSON.stringify(v));
+                        }
+                    });
+                }
+            }"
+            @keydown.escape.window="mobileNavOpen = false"
+            :class="{ 'max-lg:overflow-hidden': mobileNavOpen }"
+        >
+            <div
+                x-show="mobileNavOpen"
+                x-transition.opacity
+                @click="mobileNavOpen = false"
+                class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 lg:hidden"
+                x-cloak
+            ></div>
             {% if user.is_client %}
                 {% include 'partials/sidebar_client.html' %}
             {% elif user.is_admin_user %}
