@@ -37,6 +37,27 @@ class Client(models.Model):
     def email(self):
         return self.user.email
 
+    @property
+    def ville_affichage(self):
+        """Ville du profil, ou à défaut celle du bien le plus récent."""
+        if self.ville.strip():
+            return self.ville
+        biens = list(self.biens.all())
+        if not biens:
+            return ''
+        return max(biens, key=lambda b: b.created_at).ville
+
+    @property
+    def localisation_affichage(self):
+        """Code postal + ville pour l'espace interne."""
+        if self.code_postal.strip() or self.ville.strip():
+            return ' '.join(p for p in (self.code_postal, self.ville) if p).strip()
+        biens = list(self.biens.all())
+        if not biens:
+            return ''
+        bien = max(biens, key=lambda b: b.created_at)
+        return ' '.join(p for p in (bien.code_postal, bien.ville) if p).strip()
+
 
 class ActiviteClient(models.Model):
     """Historique des activités client."""

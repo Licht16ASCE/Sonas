@@ -32,7 +32,11 @@ def agent_create(request):
             return redirect('accounts_team:list')
     else:
         form = AgentCreateForm()
-    return render(request, 'accounts/agent_form.html', {'form': form, 'title': 'Nouvel agent'})
+    return render(request, 'accounts/agent_form.html', {
+        'form': form,
+        'title': 'Nouvel agent',
+        'guide_tip': 'Les agents peuvent valider les biens, traiter les sinistres et gérer les dossiers clients qui leur sont assignés.',
+    })
 
 
 @gerant_required

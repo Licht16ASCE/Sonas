@@ -53,6 +53,13 @@ class BienValidationForm(forms.ModelForm):
     class Meta:
         model = Bien
         fields = ('statut', 'motif_rejet')
+        widgets = {
+            'motif_rejet': forms.Textarea(attrs={'rows': 3, 'placeholder': 'Obligatoire en cas de rejet'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_form_styles(self)
 
     def clean(self):
         cleaned = super().clean()

@@ -78,10 +78,13 @@ class Command(BaseCommand):
                 'date_fin': date.today() + timedelta(days=20),
                 'statut': ContratStatut.ACTIF,
                 'montant_annuel': 1200,
+                'plafond_indemnisation': 50000,
             },
         )
         if created:
-            self.stdout.write('  + Contrat demo (expire J-20)')
+            self.stdout.write('  + Contrat demo (expire J-20, plafond 50 000 €)')
+        else:
+            Contrat.objects.filter(reference='CTR-DEMO-001').update(plafond_indemnisation=50000)
 
         self.stdout.write(self.style.SUCCESS('\nDonnées demo créées.'))
         self.stdout.write('Comptes (mot de passe: sonas2024):')

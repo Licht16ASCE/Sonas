@@ -50,7 +50,11 @@ def client_profile(request):
             return redirect('clients_client:profile')
     else:
         form = ClientProfileForm(instance=client)
-    return render(request, 'clients/profile.html', {'form': form, 'client': client})
+    return render(request, 'clients/profile.html', {
+        'form': form,
+        'client': client,
+        'guide_tip': 'Votre email sert d\'identifiant de connexion. Contactez votre agent en cas de changement d\'adresse.',
+    })
 
 
 @client_required
@@ -67,15 +71,17 @@ def client_activites(request):
 
 @internal_required
 def client_list(request):
-    qs = Client.objects.select_related('user').filter(is_active=True)
+    qs = Client.objects.select_related('user').prefetch_related('biens').filter(is_active=True)
     search = request.GET.get('q', '').strip()
     if search:
         qs = qs.filter(
             models.Q(raison_sociale__icontains=search) |
             models.Q(user__first_name__icontains=search) |
             models.Q(user__last_name__icontains=search) |
-            models.Q(user__email__icontains=search)
-        )
+            models.Q(user__email__icontains=search) |
+            models.Q(ville__icontains=search) |
+            models.Q(biens__ville__icontains=search)
+        ).distinct()
     return render(request, 'clients/list_internal.html', {
         'clients': qs,
         'search': search,
@@ -86,15 +92,29 @@ def client_list(request):
 
 @internal_required
 def client_detail(request, pk):
-    client = get_object_or_404(Client.objects.select_related('user'), pk=pk)
+    from documents.models import Document
+    from sinistres.models import Sinistre
+
+    client = get_object_or_404(
+        Client.objects.select_related('user').prefetch_related('biens'),
+        pk=pk,
+    )
     activites = client.activites.all()[:20]
     biens = client.biens.all()
     contrats = client.contrats.select_related('bien').all()
+    sinistres = Sinistre.objects.filter(
+        contrat__client=client
+    ).select_related('contrat', 'contrat__bien').order_by('-created_at')
+    documents = Document.objects.filter(
+        models.Q(bien__client=client) | models.Q(sinistre__contrat__client=client)
+    ).select_related('bien', 'sinistre').order_by('-created_at')
     return render(request, 'clients/detail_internal.html', {
         'client': client,
         'activites': activites,
         'biens': biens,
         'contrats': contrats,
+        'sinistres': sinistres,
+        'documents': documents,
     })
 
 
@@ -112,7 +132,17 @@ def client_create(request):
             return redirect('clients_internal:detail', pk=client.pk)
     else:
         form = ClientCreateForm()
-    return render(request, 'clients/form_internal.html', {'form': form, 'title': 'Nouveau client'})
+    return render(request, 'clients/form_internal.html', {
+        'form': form,
+        'title': 'Nouveau client',
+        'guide_steps': [
+            'Créer le compte client',
+            'Communiquer les identifiants',
+            'Le client déclare ses biens',
+            'Suivi des dossiers en ligne',
+        ],
+        'guide_tip': 'Communiquez un mot de passe temporaire au client ou invitez-le à le réinitialiser après la première connexion.',
+    })
 
 
 @internal_required
@@ -130,4 +160,5 @@ def client_edit(request, pk):
         'form': form,
         'client': client,
         'title': f'Modifier {client.display_name}',
+        'guide_tip': 'Les modifications du profil client sont visibles immédiatement dans son espace personnel.',
     })

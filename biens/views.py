@@ -6,7 +6,13 @@ from core.decorators import client_required, internal_required
 from core.filters import FILTER_CHOICES, apply_status_filter, get_active_filter
 from clients.models import ActiviteClient
 from clients.services import log_client_activity
-from notifications.services import create_notification, create_pending_action, resolve_pending_for_object
+from notifications.services import (
+    create_notification,
+    create_pending_action,
+    notify_staff,
+    resolve_pending_for_object,
+)
+from notifications.models import ActionType
 from .forms import BienForm, BienValidationForm
 from .models import Bien, BienStatut
 
@@ -54,11 +60,29 @@ def bien_create_client(request):
                 message=f'Votre bien {bien.reference} est en attente de validation.',
                 obj=bien,
             )
+            notify_staff(
+                title=f'Bien {bien.reference} à valider',
+                message=f'{client.display_name} a déclaré un bien ({bien.ville}).',
+                obj=bien,
+                pending_action_type=ActionType.BIEN_A_VALIDER,
+                pending_title=f'Valider le bien {bien.reference}',
+                pending_description=f'Client : {client.display_name} — {bien.adresse}, {bien.ville}',
+            )
             messages.success(request, 'Bien déclaré avec succès. Ajoutez vos documents justificatifs.')
             return redirect('biens_client:detail', pk=bien.pk)
     else:
         form = BienForm()
-    return render(request, 'biens/form.html', {'form': form, 'title': 'Déclarer un bien'})
+    return render(request, 'biens/form.html', {
+        'form': form,
+        'title': 'Déclarer un bien',
+        'guide_steps': [
+            'Vous déclarez le bien',
+            'Vous uploadez les justificatifs',
+            'Un agent valide le bien',
+            'Vous souscrivez un contrat',
+        ],
+        'guide_tip': 'Après la déclaration, ajoutez au moins un justificatif (titre de propriété, bail…) pour accélérer la validation.',
+    })
 
 
 @client_required
@@ -120,24 +144,47 @@ def bien_detail(request, pk):
 @internal_required
 def bien_create(request):
     from clients.models import Client
+    from django.urls import reverse
+    client_id = request.GET.get('client')
+    client = Client.objects.filter(pk=client_id).first() if client_id else None
+
     if request.method == 'POST':
         form = BienForm(request.POST)
-        client_id = request.POST.get('client_id')
-        client = get_object_or_404(Client, pk=client_id)
+        client = get_object_or_404(Client, pk=request.POST.get('client_id'))
         if form.is_valid():
             bien = form.save(commit=False)
             bien.client = client
             bien.save()
+            if bien.statut == BienStatut.EN_ATTENTE:
+                notify_staff(
+                    title=f'Bien {bien.reference} à valider',
+                    message=f'Bien créé pour {client.display_name}.',
+                    obj=bien,
+                    pending_action_type=ActionType.BIEN_A_VALIDER,
+                    pending_title=f'Valider le bien {bien.reference}',
+                    pending_description=f'Client : {client.display_name}',
+                    exclude_user=request.user,
+                )
             messages.success(request, 'Bien créé.')
             return redirect('biens:detail', pk=bien.pk)
     else:
         form = BienForm()
-    from clients.models import Client
+
     clients = Client.objects.filter(is_active=True).select_related('user')
     return render(request, 'biens/form_internal.html', {
         'form': form,
         'clients': clients,
+        'selected_client': client,
         'title': 'Nouveau bien',
+        'back_url': reverse('biens:list'),
+        'client_select_url': reverse('biens:create'),
+        'help_steps': [
+            'Sélectionnez le client propriétaire',
+            'Renseignez l\'adresse et le type de bien',
+            'Le bien passera en attente de validation',
+            'Ajoutez des justificatifs depuis la fiche bien',
+        ],
+        'help_note': 'Un bien validé est requis avant de souscrire un contrat.',
     })
 
 
@@ -149,7 +196,8 @@ def bien_validate(request, pk):
         if form.is_valid():
             old_statut = bien.statut
             bien = form.save()
-            resolve_pending_for_object(bien)
+            resolve_pending_for_object(bien, action_type=ActionType.BIEN_A_VALIDER)
+            resolve_pending_for_object(bien, action_type=ActionType.BIEN_INCOMPLET)
             create_notification(
                 user=bien.client.user,
                 notif_type='STATUT_CHANGE',
