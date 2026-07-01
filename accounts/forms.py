@@ -1,12 +1,45 @@
 from django import forms
 from django.contrib.auth import authenticate
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordChangeForm
 from django.contrib.auth import get_user_model
 
 from accounts.models import UserRole
 from core.forms import apply_form_styles
 
 User = get_user_model()
+
+
+class UserAccountForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email', 'phone')
+        labels = {
+            'first_name': 'Prénom',
+            'last_name': 'Nom',
+            'email': 'Adresse e-mail',
+            'phone': 'Téléphone',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_form_styles(self)
+        self.fields['first_name'].required = True
+        self.fields['last_name'].required = True
+
+    def clean_email(self):
+        email = self.cleaned_data['email'].strip().lower()
+        if User.objects.filter(email__iexact=email).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError('Cette adresse e-mail est déjà utilisée.')
+        return email
+
+
+class SonasPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_form_styles(self)
+        self.fields['old_password'].label = 'Mot de passe actuel'
+        self.fields['new_password1'].label = 'Nouveau mot de passe'
+        self.fields['new_password2'].label = 'Confirmer le nouveau mot de passe'
 
 
 class LoginForm(AuthenticationForm):

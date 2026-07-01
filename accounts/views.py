@@ -1,13 +1,14 @@
-from django.contrib.auth import login, logout
+from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from clients.forms import ClientRegisterForm
 from clients.models import ActiviteClient
 from clients.services import log_client_activity
-from .forms import LoginForm
+from .forms import LoginForm, SonasPasswordChangeForm, UserAccountForm
 
 
 @require_http_methods(['GET', 'POST'])
@@ -62,19 +63,71 @@ def update_theme(request):
     if theme in ('light', 'dark', 'system'):
         request.user.theme_preference = theme
         request.user.save(update_fields=['theme_preference'])
-    return redirect(request.META.get('HTTP_REFERER', '/'))
+    referer = request.META.get('HTTP_REFERER')
+    if referer:
+        return redirect(referer)
+    return redirect('accounts:settings')
+
+
+def _settings_redirect(section):
+    url = reverse('accounts:settings')
+    if section:
+        return redirect(f'{url}?section={section}')
+    return redirect(url)
 
 
 @login_required
 def settings_view(request):
     from accounts.models import User
 
+    user = request.user
+    active_section = request.GET.get('section', 'account')
+    if active_section not in ('account', 'security', 'appearance', 'session'):
+        active_section = 'account'
+
+    account_form = UserAccountForm(instance=user)
+    password_form = SonasPasswordChangeForm(user)
+
     if request.method == 'POST':
-        theme = request.POST.get('theme', 'system')
-        if theme in ('light', 'dark', 'system'):
-            request.user.theme_preference = theme
-            request.user.save(update_fields=['theme_preference'])
-        return redirect('accounts:settings')
+        section = request.POST.get('section')
+
+        if section == 'account':
+            account_form = UserAccountForm(request.POST, instance=user)
+            if account_form.is_valid():
+                account_form.save()
+                if user.is_client and hasattr(user, 'client_profile'):
+                    log_client_activity(
+                        user.client_profile,
+                        ActiviteClient.TypeActivite.PROFIL_MODIFIE,
+                        'Informations de compte mises à jour',
+                        user,
+                    )
+                messages.success(request, 'Informations de compte enregistrées.')
+                return _settings_redirect('account')
+            active_section = 'account'
+
+        elif section == 'security':
+            password_form = SonasPasswordChangeForm(user, request.POST)
+            if password_form.is_valid():
+                password_form.save()
+                update_session_auth_hash(request, password_form.user)
+                messages.success(request, 'Mot de passe modifié avec succès.')
+                return _settings_redirect('security')
+            active_section = 'security'
+
+        elif section == 'appearance':
+            theme = request.POST.get('theme', 'system')
+            if theme in ('light', 'dark', 'system'):
+                user.theme_preference = theme
+                user.save(update_fields=['theme_preference'])
+                messages.success(request, 'Préférence d\'affichage enregistrée.')
+                return _settings_redirect('appearance')
+            active_section = 'appearance'
 
     theme_choices = User._meta.get_field('theme_preference').choices
-    return render(request, 'accounts/settings.html', {'theme_choices': theme_choices})
+    return render(request, 'accounts/settings.html', {
+        'account_form': account_form,
+        'password_form': password_form,
+        'theme_choices': theme_choices,
+        'active_section': active_section,
+    })
