@@ -1,7 +1,0 @@
-<div class="sonas-card sonas-kpi">
-    <p class="sonas-kpi-label">{{ label }}</p>
-    <p class="sonas-kpi-value {% if color %}text-{{ color }}-600{% endif %}">{{ value }}</p>
-    {% if link_url %}
-    <a href="{{ link_url }}" class="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mt-3 inline-block hover:underline">{{ link_text|default:"Voir" }} →</a>
-    {% endif %}
-</div>

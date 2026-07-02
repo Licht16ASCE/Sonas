@@ -1,5 +1,0 @@
-{% extends 'base.html' %}
-{% block title %}{{ title }}{% endblock %}
-{% block content %}
-{% include 'partials/internal_form_shell.html' with form_title=title form_subtitle="Déclaration de bien pour un client — le dossier passera en validation." back_url=back_url back_label="Liste des biens" show_client_select=True client_select_url=client_select_url client_optional_empty=True clients=clients selected_client=selected_client form=form submit_label="Créer le bien" submit_btn_class="sonas-btn-primary" form_help_steps=help_steps form_help_note=help_note only %}
-{% endblock %}

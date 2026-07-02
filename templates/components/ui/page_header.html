@@ -1,9 +1,0 @@
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-    <div class="sonas-page-header mb-0">
-        <h1>{{ title }}</h1>
-        {% if subtitle %}<p>{{ subtitle }}</p>{% endif %}
-    </div>
-    {% if action_url %}
-    <a href="{{ action_url }}" class="sonas-btn sonas-btn-primary shrink-0">{{ action_label|default:"Nouveau" }}</a>
-    {% endif %}
-</div>
