@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}{{ bien.reference }}{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+    <div>
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+            <h1>{{ bien.reference }}</h1>
+            <span class="sonas-badge sonas-badge-{% if bien.statut == 'VALIDE' %}green{% elif bien.statut == 'REJETE' %}red{% else %}yellow{% endif %}">
+                {{ bien.get_statut_display }}
+            </span>
+        </div>
+        <p>Client : <a href="{% url 'clients_internal:detail' bien.client.pk %}" class="text-indigo-600 hover:underline">{{ bien.client.display_name }}</a></p>
+    </div>
+    <a href="{% url 'biens:list' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Biens</a>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Caractéristiques</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Type</dt><dd class="font-medium">{{ bien.get_type_bien_display }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Adresse</dt><dd class="font-medium text-right">{{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Surface</dt><dd class="font-medium">{% if bien.surface_m2 %}{{ bien.surface_m2 }} m²{% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Déclaré le</dt><dd class="font-medium">{{ bien.created_at|date:"d/m/Y" }}</dd></div>
+            {% if bien.description %}
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <dt class="text-slate-500 mb-1">Description</dt>
+                <dd class="text-slate-700 dark:text-slate-300">{{ bien.description }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        <a href="{% url 'documents:upload' %}?bien={{ bien.pk }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-5">Ajouter un document</a>
+    </div>
+
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Validation agent</h2>
+        <form method="post" action="{% url 'biens:validate' bien.pk %}" class="space-y-4">
+            {% csrf_token %}
+            {% for field in validation_form %}
+            <div>
+                <label class="sonas-label">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors.0 }}</p>{% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="sonas-btn sonas-btn-primary">Mettre à jour le statut</button>
+        </form>
+    </div>
+</div>
+
+{% if bien.documents.all %}
+<div class="mt-6 sonas-card p-6">
+    <h2 class="font-bold mb-4">Documents ({{ bien.documents.count }})</h2>
+    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for doc in bien.documents.all %}
+        <li class="py-2.5 flex justify-between items-center text-sm gap-3">
+            <a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank">{{ doc.titre }}</a>
+            <span class="text-slate-400">{{ doc.created_at|date:"d/m/Y" }}</span>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+{% endblock %}

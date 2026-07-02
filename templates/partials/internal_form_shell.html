@@ -1,0 +1,52 @@
+<div class="sonas-create-page">
+    <div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+            <h1>{{ form_title }}</h1>
+            <p>{{ form_subtitle }}</p>
+        </div>
+        <a href="{{ back_url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← {{ back_label }}</a>
+    </div>
+
+    {% include 'partials/form_guide_top.html' with guide_steps=form_help_steps guide_tip=form_help_note guide_tip_title=form_help_tip_title guide_active_step=form_help_active_step|default:1 %}
+
+    <div class="sonas-create-body">
+        <form method="post" class="sonas-card p-6 space-y-5">
+            {% csrf_token %}
+            {% if show_client_select %}
+            <div>
+                <label class="sonas-label" for="client_id">Client <span class="text-red-500">*</span></label>
+                <select
+                    id="client_id"
+                    name="client_id"
+                    class="sonas-input"
+                    required
+                    {% if client_select_url %}onchange="if(this.value){window.location='{{ client_select_url }}?client='+this.value}"{% endif %}
+                >
+                    {% if client_optional_empty %}<option value="">— Sélectionner un client —</option>{% endif %}
+                    {% for c in clients %}
+                    <option value="{{ c.pk }}" {% if selected_client and selected_client.pk == c.pk %}selected{% endif %}>{{ c.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% for field in form %}
+            <div>
+                <label class="sonas-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>{% endif %}
+                {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors.0 }}</p>{% endif %}
+            </div>
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 text-sm">{{ form.non_field_errors.0 }}</div>
+            {% endif %}
+
+            <div class="flex flex-wrap gap-3 pt-2">
+                <button type="submit" class="sonas-btn {{ submit_btn_class|default:'sonas-btn-primary' }}">{{ submit_label }}</button>
+                <a href="{{ back_url }}" class="sonas-btn sonas-btn-secondary">Annuler</a>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}{{ client.display_name }}{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+    <div>
+        <h1>{{ client.display_name }}</h1>
+        <p>{{ client.email }}{% if client.ville_affichage %} — {{ client.ville_affichage }}{% endif %}</p>
+    </div>
+    <div class="flex flex-wrap gap-2 shrink-0">
+        <a href="{% url 'clients_internal:edit' client.pk %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Modifier</a>
+        <a href="{% url 'clients_internal:list' %}" class="sonas-btn sonas-btn-ghost sonas-btn-sm">← Clients</a>
+    </div>
+</div>
+
+<div class="grid lg:grid-cols-3 gap-6">
+    <div class="sonas-card p-6 lg:col-span-1">
+        <h2 class="font-bold mb-4">Informations</h2>
+        <dl class="space-y-3 text-sm">
+            <div><dt class="text-slate-500">Raison sociale</dt><dd class="font-medium mt-0.5">{{ client.raison_sociale|default:"—" }}</dd></div>
+            <div><dt class="text-slate-500">Adresse</dt><dd class="font-medium mt-0.5">{{ client.adresse|default:"—" }}</dd></div>
+            <div><dt class="text-slate-500">Ville</dt><dd class="font-medium mt-0.5">{{ client.localisation_affichage|default:"—" }}</dd></div>
+            <div><dt class="text-slate-500">SIRET</dt><dd class="font-medium mt-0.5">{{ client.siret|default:"—" }}</dd></div>
+            <div><dt class="text-slate-500">Inscrit le</dt><dd class="font-medium mt-0.5">{{ client.created_at|date:"d/m/Y" }}</dd></div>
+        </dl>
+    </div>
+    <div class="lg:col-span-2 space-y-6">
+        <div class="sonas-card p-6">
+            <h2 class="font-bold mb-4">Biens ({{ biens.count }})</h2>
+            {% if biens %}
+            <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+                {% for b in biens %}
+                <li>
+                    <a href="{% url 'biens:detail' b.pk %}" class="flex justify-between items-center gap-3 py-3 text-sm sonas-mobile-card">
+                        <span class="text-indigo-600 font-medium">{{ b.reference }} · {{ b.ville }}</span>
+                        <span class="sonas-badge sonas-badge-gray shrink-0">{{ b.get_statut_display }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-slate-500">Aucun bien déclaré.</p>
+            {% endif %}
+        </div>
+        <div class="sonas-card p-6">
+            <h2 class="font-bold mb-4">Sinistres ({{ sinistres.count }})</h2>
+            {% if sinistres %}
+            <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+                {% for s in sinistres %}
+                <li>
+                    <a href="{% url 'sinistres:detail' s.pk %}" class="flex justify-between items-center gap-3 py-3 text-sm sonas-mobile-card">
+                        <span class="text-indigo-600 font-medium">{{ s.reference }} · {{ s.get_type_sinistre_display }}</span>
+                        <span class="sonas-badge sonas-badge-gray shrink-0">{{ s.get_statut_display }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-slate-500">Aucun sinistre déclaré.</p>
+            {% endif %}
+        </div>
+        <div class="sonas-card p-6">
+            <h2 class="font-bold mb-4">Documents ({{ documents.count }})</h2>
+            {% if documents %}
+            <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+                {% for doc in documents %}
+                <li class="py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 text-sm">
+                    <a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank" rel="noopener">{{ doc.titre }}</a>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        {% if doc.bien %}
+                        <a href="{% url 'biens:detail' doc.bien.pk %}" class="sonas-badge sonas-badge-blue hover:opacity-80">Bien {{ doc.bien.reference }}</a>
+                        {% elif doc.sinistre %}
+                        <a href="{% url 'sinistres:detail' doc.sinistre.pk %}" class="sonas-badge sonas-badge-yellow hover:opacity-80">Sinistre {{ doc.sinistre.reference }}</a>
+                        {% endif %}
+                        <span class="text-slate-400">{{ doc.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-slate-500">Aucun document uploadé.</p>
+            {% endif %}
+        </div>
+        <div class="sonas-card p-6">
+            <h2 class="font-bold mb-4">Contrats ({{ contrats.count }})</h2>
+            {% if contrats %}
+            <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+                {% for c in contrats %}
+                <li>
+                    <a href="{% url 'contrats:detail' c.pk %}" class="flex justify-between items-center gap-3 py-3 text-sm sonas-mobile-card">
+                        <span class="text-indigo-600 font-medium">{{ c.reference }}</span>
+                        <span class="sonas-badge sonas-badge-gray shrink-0">{{ c.get_statut_display }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-slate-500">Aucun contrat.</p>
+            {% endif %}
+        </div>
+        <div class="sonas-card p-6">
+            <h2 class="font-bold mb-4">Activités récentes</h2>
+            {% if activites %}
+            <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+                {% for a in activites %}
+                <li class="py-2.5 flex justify-between gap-3 text-sm">
+                    <span class="font-medium">{{ a.get_type_activite_display }}</span>
+                    <span class="text-slate-400 shrink-0">{{ a.created_at|date:"d/m/Y H:i" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-sm text-slate-500">Aucune activité.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

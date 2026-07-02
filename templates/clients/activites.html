@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Activités{% endblock %}
+{% block content %}
+<div class="sonas-page-header mb-8">
+    <h1>Historique d'activités</h1>
+    <p>Toutes les actions effectuées sur votre espace client</p>
+</div>
+<div class="sonas-card overflow-hidden">
+    {% for a in activites %}
+    <div class="p-5 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 {% if not forloop.last %}border-b border-slate-100 dark:border-slate-700{% endif %}">
+        <div class="min-w-0">
+            <span class="sonas-badge sonas-badge-blue">{{ a.get_type_activite_display }}</span>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-2">{{ a.description }}</p>
+        </div>
+        <span class="text-sm text-slate-400 shrink-0">{{ a.created_at|date:"d/m/Y H:i" }}</span>
+    </div>
+    {% empty %}
+    <p class="p-10 text-center text-slate-500">Aucune activité enregistrée.</p>
+    {% endfor %}
+</div>
+{% endblock %}

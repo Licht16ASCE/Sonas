@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load notification_tags %}
+{% block title %}Actions en attente{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1>Actions en attente</h1>
+        <p>{% if user.is_internal %}Tâches à traiter dans vos dossiers clients{% else %}Reprenez vos tâches incomplètes pour finaliser vos dossiers{% endif %}</p>
+    </div>
+    <a href="{% if user.is_client %}{% url 'notifications_client:list' %}{% else %}{% url 'notifications:list' %}{% endif %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Notifications</a>
+</div>
+
+<div class="space-y-4">
+    {% for action in actions %}
+    <div class="sonas-card p-5 border-l-4 border-l-amber-400">
+        <div class="flex flex-col sm:flex-row sm:justify-between gap-4">
+            <div class="min-w-0 flex-1">
+                <span class="sonas-badge sonas-badge-yellow">{{ action.get_action_type_display }}</span>
+                <h2 class="font-semibold mt-2 text-slate-900 dark:text-white">{{ action.title }}</h2>
+                {% if action.description %}<p class="text-sm text-slate-500 mt-1">{{ action.description }}</p>{% endif %}
+                <p class="text-xs text-slate-400 mt-2">{{ action.created_at|date:"d/m/Y H:i" }}</p>
+            </div>
+            <div class="flex flex-wrap gap-2 shrink-0 items-start">
+                {% content_object_url user action.content_object as object_url %}
+                {% if object_url %}
+                <a href="{{ object_url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Traiter →</a>
+                {% endif %}
+                <form method="post" action="{% if user.is_client %}{% url 'notifications_client:resolve_action' action.pk %}{% else %}{% url 'notifications:resolve_action' action.pk %}{% endif %}">
+                    {% csrf_token %}
+                    <button type="submit" class="sonas-btn sonas-btn-ghost sonas-btn-sm" title="Marquer comme traitée">Ignorer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="sonas-card p-10 text-center text-slate-500">
+        <svg class="w-12 h-12 mx-auto mb-3 text-emerald-400 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Aucune action en attente. Tout est à jour !
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

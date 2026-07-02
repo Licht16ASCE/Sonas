@@ -1,0 +1,65 @@
+<aside
+  class="sonas-sidebar flex flex-col shrink-0 sonas-card border-0 border-r rounded-none min-h-screen transition-transform duration-300 ease-out fixed inset-y-0 left-0 z-50 w-72 max-w-[88vw] lg:static lg:z-auto lg:max-w-none lg:transition-[width]"
+  :class="[
+    mobileNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+    collapsed ? 'lg:w-[4.5rem]' : 'lg:w-64'
+  ]"
+>
+    <div class="lg:hidden p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+        <a href="{% url 'core_internal:dashboard' %}" @click="mobileNavOpen = false" class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-red-600 to-rose-500 flex items-center justify-center shadow-md shadow-red-500/20">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <span class="text-lg font-extrabold tracking-tight">SONAS</span>
+        </a>
+        <button type="button" @click="mobileNavOpen = false" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Fermer le menu">
+            <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+    </div>
+    <div class="hidden lg:flex p-5 border-b border-slate-200 dark:border-slate-700 items-center justify-between gap-2">
+        <a href="{% url 'core_internal:dashboard' %}" class="flex items-center gap-2.5 min-w-0" x-show="!collapsed">
+            <div class="w-9 h-9 shrink-0 rounded-xl bg-gradient-to-br from-red-600 to-rose-500 flex items-center justify-center shadow-md shadow-red-500/20">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <span class="text-lg font-extrabold tracking-tight">SONAS</span>
+        </a>
+        <button type="button" @click="collapsed = !collapsed" class="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 ml-auto">
+            <svg class="w-4 h-4 text-slate-500 transition-transform" :class="collapsed && 'rotate-180'" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+        </button>
+    </div>
+    <p class="px-5 pt-3 text-xs text-slate-500 font-medium lg:hidden sonas-sidebar-subtitle">Administration technique</p>
+    <p class="px-5 pt-3 text-xs text-slate-500 font-medium hidden lg:block sonas-sidebar-subtitle" x-show="!collapsed">Administration technique</p>
+    <nav class="flex-1 p-3 space-y-1 overflow-y-auto overscroll-contain" @click="if ($event.target.closest('a')) mobileNavOpen = false">
+        <a href="{% url 'core_internal:dashboard' %}" class="sonas-sidebar-link" title="Dashboard technique">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Dashboard technique</span>
+        </a>
+        <a href="/{{ admin_url }}auth/user/" class="sonas-sidebar-link" title="Utilisateurs">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Utilisateurs</span>
+        </a>
+        <a href="{% url 'core_internal:system' %}" class="sonas-sidebar-link" title="Gestion système">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Gestion système</span>
+        </a>
+        <a href="{% url 'core_internal:logs' %}" class="sonas-sidebar-link" title="Logs">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Logs</span>
+        </a>
+        <a href="{% url 'notifications:list' %}" class="sonas-sidebar-link" title="Notifications">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Notifications</span>
+            {% if unread_notifications_count %}<span class="ml-auto sonas-badge sonas-badge-red" x-show="!collapsed">{{ unread_notifications_count }}</span>{% endif %}
+        </a>
+        <a href="{% url 'notifications:pending_actions' %}" class="sonas-sidebar-link" title="Actions en attente">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Actions en attente</span>
+            {% if pending_actions_count %}<span class="ml-auto sonas-badge sonas-badge-yellow" x-show="!collapsed">{{ pending_actions_count }}</span>{% endif %}
+        </a>
+        <a href="/{{ admin_url }}" class="sonas-sidebar-link" title="Admin secure">
+            <svg class="w-5 h-5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span class="sonas-sidebar-text" x-show="!collapsed">Admin secure</span>
+        </a>
+        {% include 'partials/sidebar_settings_link.html' %}
+    </nav>
+</aside>

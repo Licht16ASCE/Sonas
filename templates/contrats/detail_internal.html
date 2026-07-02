@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}{{ contrat.reference }}{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+    <div>
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+            <h1>{{ contrat.reference }}</h1>
+            <span class="sonas-badge sonas-badge-{% if contrat.statut == 'ACTIF' %}green{% elif contrat.statut == 'INACTIF' or contrat.statut == 'EPUISE' or contrat.statut == 'EXPIRE' or contrat.statut == 'RESILIE' %}red{% else %}yellow{% endif %}">
+                {{ contrat.get_statut_display }}
+            </span>
+        </div>
+        <p>Client : <a href="{% url 'clients_internal:detail' contrat.client.pk %}" class="text-indigo-600 hover:underline">{{ contrat.client.display_name }}</a></p>
+    </div>
+    <a href="{% url 'contrats:list' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Contrats</a>
+</div>
+
+{% if contrat.statut == 'INACTIF' or contrat.statut == 'EPUISE' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
+    <p class="font-semibold text-red-800 dark:text-red-200">Contrat inactif — plafond dépassé ou épuisé</p>
+    <p class="text-sm mt-1">Sinistres bloqués. Le client ne peut plus déclarer de sinistre sur ce contrat.</p>
+</div>
+{% endif %}
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Informations contractuelles</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Bien</dt><dd class="font-medium"><a href="{% url 'biens:detail' contrat.bien.pk %}" class="text-indigo-600 hover:underline">{{ contrat.bien.reference }}</a></dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Période</dt><dd class="font-medium">{{ contrat.date_debut|date:"d/m/Y" }} → {{ contrat.date_fin|date:"d/m/Y" }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant annuel</dt><dd class="font-medium">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} €{% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond indemnisation</dt><dd class="font-medium">{% if contrat.plafond_indemnisation %}{{ contrat.plafond_indemnisation }} €{% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Déjà indemnisé</dt><dd class="font-medium">{{ contrat.montant_indemnise_cumule }} €</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond disponible</dt><dd class="font-semibold {% if contrat.plafond_disponible <= 0 %}text-red-600{% else %}text-emerald-600{% endif %}">{{ contrat.plafond_disponible }} €</dd></div>
+            {% if contrat.notes %}
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <dt class="text-slate-500 mb-1">Notes</dt>
+                <dd class="text-slate-700 dark:text-slate-300">{{ contrat.notes }}</dd>
+            </div>
+            {% endif %}
+        </dl>
+        {% if contrat.statut == 'BROUILLON' %}
+        <form method="post" action="{% url 'contrats:activate' contrat.pk %}" class="mt-5">
+            {% csrf_token %}
+            <button type="submit" class="sonas-btn sonas-btn-primary sonas-btn-sm">Activer le contrat</button>
+        </form>
+        {% endif %}
+        {% if document_contrat %}
+        <a href="{{ document_contrat.fichier.url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-3" target="_blank" download>Contrat PDF signé</a>
+        {% endif %}
+    </div>
+
+    <div class="sonas-card p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="font-bold">Sinistres liés</h2>
+            <a href="{% url 'sinistres:create' %}?client={{ contrat.client.pk }}" class="text-sm text-indigo-600 hover:underline">+ Nouveau</a>
+        </div>
+        {% if sinistres %}
+        <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+            {% for s in sinistres %}
+            <li class="py-3 flex justify-between items-center text-sm gap-3">
+                <a href="{% url 'sinistres:detail' s.pk %}" class="text-indigo-600 hover:underline font-medium">{{ s.reference }}</a>
+                <span class="sonas-badge sonas-badge-gray">{{ s.get_statut_display }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-slate-500">Aucun sinistre sur ce contrat.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

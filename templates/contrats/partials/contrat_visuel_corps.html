@@ -1,0 +1,210 @@
+{# Corps contractuel — champs éditables (form) ou valeurs figées (PDF) #}
+<article class="contrat-visuel-paper">
+    <header class="contrat-visuel-header">
+        <div class="contrat-visuel-header-inner">
+            <div class="contrat-visuel-logo" aria-hidden="true">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            </div>
+            <h2>Contrat d'assurance multirisque habitation</h2>
+            <p class="contrat-subtitle">SONAS — Système de gestion des assurances</p>
+            {% if contrat.reference %}
+            <span class="contrat-ref">Réf. {{ contrat.reference }}</span>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="contrat-visuel-body">
+        <section class="contrat-visuel-section">
+            <div class="contrat-section-head">
+                <span class="contrat-section-num">I</span>
+                <h3>Entre les soussignés</h3>
+            </div>
+
+            <div class="contrat-party-card">
+                <div class="contrat-party-icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                </div>
+                <div>
+                    <p class="contrat-party-label">L'assureur</p>
+                    <p class="contrat-party-name">{{ assureur|default:"SONAS Assurances" }}</p>
+                    <p class="contrat-party-meta">Société d'assurance — ci-après « l'Assureur »</p>
+                </div>
+            </div>
+
+            <div class="contrat-party-card">
+                <div class="contrat-party-icon" aria-hidden="true">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </div>
+                <div>
+                    <p class="contrat-party-label">Le souscripteur</p>
+                    <p class="contrat-party-name">{{ client.display_name }}</p>
+                    <p class="contrat-party-meta">
+                        {% if client.adresse %}{{ client.adresse }}{% if client.code_postal or client.ville %}, {% endif %}{% endif %}
+                        {% if client.code_postal %}{{ client.code_postal }} {% endif %}{{ client.ville|default:"" }}
+                        {% if client.email %}<br>{{ client.email }}{% endif %}
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="contrat-visuel-section">
+            <div class="contrat-section-head">
+                <span class="contrat-section-num">II</span>
+                <h3>Objet et bien assuré</h3>
+            </div>
+            <p class="contrat-visuel-p">
+                Le présent contrat couvre le bien immobilier désigné ci-dessous, appartenant au Souscripteur
+                et validé au sein du dossier SONAS.
+            </p>
+            {% if readonly %}
+            <div class="contrat-field-block">
+                <p class="contrat-field-label">Bien assuré</p>
+                <p class="contrat-visuel-p" style="margin:0">
+                    <span class="contrat-readonly-value">{{ bien.reference }}</span> —
+                    {{ bien.get_type_bien_display }}<br>
+                    {{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}
+                    {% if bien.surface_m2 %} · {{ bien.surface_m2 }} m²{% endif %}
+                </p>
+            </div>
+            {% else %}
+            <div class="contrat-field-block">
+                <label class="contrat-field-label" for="{{ form.bien.id_for_label }}">
+                    {{ form.bien.label }} <span class="required">*</span>
+                </label>
+                {{ form.bien }}
+                {% if form.bien.errors %}<p class="contrat-field-error">{{ form.bien.errors.0 }}</p>{% endif %}
+                <p class="contrat-field-hint">Le type et l'adresse s'affichent après sélection.</p>
+                <div id="contrat-bien-preview" class="contrat-bien-preview" aria-live="polite"></div>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="contrat-visuel-section">
+            <div class="contrat-section-head">
+                <span class="contrat-section-num">III</span>
+                <h3>Durée et période de garantie</h3>
+            </div>
+            {% if readonly %}
+            <p class="contrat-visuel-p">
+                Du <span class="contrat-readonly-value">{{ contrat.date_debut|date:"d/m/Y" }}</span>
+                au <span class="contrat-readonly-value">{{ contrat.date_fin|date:"d/m/Y" }}</span>.
+            </p>
+            {% else %}
+            <div class="contrat-fields-grid contrat-fields-grid--2">
+                <div class="contrat-field-block" style="margin-top:0">
+                    <label class="contrat-field-label" for="{{ form.date_debut.id_for_label }}">
+                        {{ form.date_debut.label }} <span class="required">*</span>
+                    </label>
+                    {{ form.date_debut }}
+                    {% if form.date_debut.errors %}<p class="contrat-field-error">{{ form.date_debut.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="contrat-field-block" style="margin-top:0">
+                    <label class="contrat-field-label" for="{{ form.date_fin.id_for_label }}">
+                        {{ form.date_fin.label }} <span class="required">*</span>
+                    </label>
+                    {{ form.date_fin }}
+                    {% if form.date_fin.errors %}<p class="contrat-field-error">{{ form.date_fin.errors.0 }}</p>{% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="contrat-visuel-section">
+            <div class="contrat-section-head">
+                <span class="contrat-section-num">IV</span>
+                <h3>Prime et plafond d'indemnisation</h3>
+            </div>
+            {% if readonly %}
+            <p class="contrat-visuel-p">
+                Prime annuelle : <span class="contrat-readonly-value">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} €{% else %}—{% endif %}</span>.
+                Plafond : <span class="contrat-readonly-value">{{ contrat.plafond_indemnisation }} €</span>.
+            </p>
+            {% else %}
+            <div class="contrat-fields-grid contrat-fields-grid--2">
+                <div class="contrat-field-block" style="margin-top:0">
+                    <label class="contrat-field-label" for="{{ form.montant_annuel.id_for_label }}">
+                        {{ form.montant_annuel.label }} <span class="required">*</span>
+                    </label>
+                    {{ form.montant_annuel }}
+                    {% if form.montant_annuel.errors %}<p class="contrat-field-error">{{ form.montant_annuel.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="contrat-field-block" style="margin-top:0">
+                    <label class="contrat-field-label" for="{{ form.plafond_indemnisation.id_for_label }}">
+                        {{ form.plafond_indemnisation.label }} <span class="required">*</span>
+                    </label>
+                    {{ form.plafond_indemnisation }}
+                    {% if form.plafond_indemnisation.errors %}<p class="contrat-field-error">{{ form.plafond_indemnisation.errors.0 }}</p>{% endif %}
+                    <p class="contrat-field-hint">Montant max. indemnisable sur la durée du contrat.</p>
+                </div>
+            </div>
+            <p class="contrat-visuel-p" style="margin-top:1rem;font-size:0.8125rem;color:var(--sonas-muted)">
+                Toute indemnisation sera déduite du plafond. En cas de dépassement, le contrat devient inactif.
+            </p>
+            {% endif %}
+        </section>
+
+        <section class="contrat-visuel-section">
+            <div class="contrat-section-head">
+                <span class="contrat-section-num">V</span>
+                <h3>Garanties et obligations</h3>
+            </div>
+            <p class="contrat-visuel-p">
+                Le Souscripteur certifie l'exactitude des informations et s'engage à informer l'Assureur
+                de toute modification. Les sinistres seront déclarés via l'espace client SONAS.
+            </p>
+            {% if not readonly %}
+            <div class="contrat-field-block">
+                <label class="contrat-field-label" for="{{ form.notes.id_for_label }}">{{ form.notes.label }}</label>
+                {{ form.notes }}
+            </div>
+            {% elif contrat.notes %}
+            <p class="contrat-visuel-p"><strong>Observations :</strong> {{ contrat.notes }}</p>
+            {% endif %}
+        </section>
+
+        <section class="contrat-visuel-section">
+            <div class="contrat-section-head">
+                <span class="contrat-section-num">VI</span>
+                <h3>Acceptation et signature</h3>
+            </div>
+            <p class="contrat-visuel-p">
+                {% if readonly %}
+                Accepté le <span class="contrat-readonly-value">{{ signature_date|date:"d/m/Y à H:i" }}</span>.
+                Demande en brouillon jusqu'à validation par un agent SONAS.
+                {% else %}
+                En signant, vous reconnaissez avoir pris connaissance des garanties, exclusions et plafonds.
+                La souscription sera transmise à un agent pour activation définitive.
+                {% endif %}
+            </p>
+        </section>
+
+        <div class="contrat-visuel-signatures">
+            <div class="contrat-sig-card">
+                <p class="sig-title">Pour l'Assureur</p>
+                <p><strong>SONAS Assurances</strong></p>
+                <p class="contrat-sig-placeholder">Cachet et signature</p>
+            </div>
+            <div class="contrat-sig-card">
+                <p class="sig-title">Le Souscripteur</p>
+                <p><strong>{{ client.display_name }}</strong></p>
+                {% if readonly %}
+                <p class="contrat-sig-placeholder" style="font-style:normal;color:var(--sonas-text)!important">
+                    Signé électroniquement le {{ signature_date|date:"d/m/Y" }}
+                </p>
+                {% else %}
+                <p class="contrat-sig-placeholder">Signature électronique à la validation</p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if not readonly %}
+        <div class="contrat-visuel-actions">
+            <label>
+                {{ form.acceptation_cg }}
+                <span>{{ form.acceptation_cg.label }}</span>
+            </label>
+            {% if form.acceptation_cg.errors %}<p class="contrat-field-error mt-2">{{ form.acceptation_cg.errors.0 }}</p>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</article>

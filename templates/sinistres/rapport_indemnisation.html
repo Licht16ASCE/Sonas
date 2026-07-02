@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}Rapport {{ rapport.reference }}{% endblock %}
+{% block content %}
+<div class="max-w-3xl">
+    <div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+        <div>
+            <h1>Rapport d'indemnisation</h1>
+            <p>{{ rapport.reference }} — Sinistre {{ sinistre.reference }}</p>
+        </div>
+        <a href="{% url back_url sinistre.pk %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Retour au sinistre</a>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 space-y-4">
+            <div class="sonas-card p-6">
+                <h2 class="font-bold mb-4">Synthèse financière</h2>
+                <dl class="space-y-3 text-sm">
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant demandé</dt><dd class="font-medium">{{ rapport.montant_demande }} €</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ rapport.montant_indemnise }} €</dd></div>
+                    {% if rapport.montant_non_couvert %}
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant non couvert</dt><dd class="font-medium text-red-600">{{ rapport.montant_non_couvert }} €</dd></div>
+                    {% endif %}
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{{ rapport.plafond_sinistre }} €</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat (avant)</dt><dd class="font-medium">{{ rapport.plafond_contrat_avant }} €</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat (après)</dt><dd class="font-medium">{{ rapport.plafond_contrat_apres }} €</dd></div>
+                </dl>
+            </div>
+
+            <div class="sonas-card p-6">
+                <h2 class="font-bold mb-4">Contenu du rapport</h2>
+                <pre class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap font-sans leading-relaxed">{{ rapport.contenu }}</pre>
+            </div>
+        </div>
+
+        <div class="space-y-4">
+            {% if rapport.depassement_detecte %}
+            <div class="sonas-card p-5 border-l-4 border-l-red-400">
+                <p class="font-semibold text-red-700 dark:text-red-300">Dépassement de plafond</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Une partie du montant n'a pas pu être couverte.</p>
+            </div>
+            {% endif %}
+            {% if rapport.contrat_invalide %}
+            <div class="sonas-card p-5 border-l-4 border-l-amber-400">
+                <p class="font-semibold text-amber-800 dark:text-amber-200">Contrat devenu inactif</p>
+                <p class="text-sm text-slate-600 dark:text-slate-400 mt-1">Le contrat {{ sinistre.contrat.reference }} n'est plus actif (plafond dépassé ou épuisé).</p>
+            </div>
+            {% endif %}
+            {% if rapport.document %}
+            <div class="sonas-card p-5">
+                <h2 class="font-bold text-sm mb-3">Document</h2>
+                <a href="{{ rapport.document.fichier.url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm w-full justify-center" target="_blank" download>Télécharger la copie</a>
+                {% if rapport.copie_client_envoyee and user.is_client %}
+                <p class="text-xs text-slate-500 mt-3">Copie transmise au client le {{ rapport.created_at|date:"d/m/Y" }}.</p>
+                {% elif rapport.copie_client_envoyee %}
+                <p class="text-xs text-slate-500 mt-3">Copie envoyée au client.</p>
+                {% endif %}
+            </div>
+            {% endif %}
+            <div class="sonas-card p-5 text-sm text-slate-500">
+                Généré le {{ rapport.created_at|date:"d/m/Y H:i" }}
+                {% if rapport.genere_par %}<br>Par {{ rapport.genere_par.get_full_name|default:rapport.genere_par.username }}{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

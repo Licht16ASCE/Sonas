@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title %}Gestion système{% endblock %}
+{% block content %}
+<div class="sonas-page-header mb-8">
+    <h1>Gestion système</h1>
+    <p>Vue technique de la plateforme SONAS</p>
+</div>
+<div class="grid md:grid-cols-2 gap-6">
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Configuration</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between"><dt class="text-slate-500">Base de données</dt><dd class="font-medium">{{ db_engine }}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Mode debug</dt><dd class="font-medium">{% if debug_mode %}Actif{% else %}Production{% endif %}</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">Timeout session</dt><dd class="font-medium">{{ session_timeout_min }} min</dd></div>
+            <div class="flex justify-between"><dt class="text-slate-500">URL admin</dt><dd class="font-medium font-mono text-xs">/{{ admin_url }}</dd></div>
+        </dl>
+    </div>
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Accès rapides</h2>
+        <div class="flex flex-wrap gap-3">
+            <a href="/{{ admin_url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Admin Django</a>
+            <a href="{% url 'core_internal:logs' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Logs critiques</a>
+            <a href="/{{ admin_url }}auth/user/" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Utilisateurs</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

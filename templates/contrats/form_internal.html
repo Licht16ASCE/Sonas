@@ -1,0 +1,5 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+{% include 'partials/internal_form_shell.html' with form_title=title form_subtitle="Création de contrat pour un client — le bien doit être validé." back_url=back_url back_label="Liste des contrats" show_client_select=True client_select_url=client_select_url clients=clients selected_client=selected_client form=form submit_label="Créer le contrat" submit_btn_class="sonas-btn-primary" form_help_steps=help_steps form_help_note=help_note only %}
+{% endblock %}

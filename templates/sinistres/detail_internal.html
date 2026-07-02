@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+{% block title %}{{ sinistre.reference }}{% endblock %}
+{% block content %}
+<div class="sonas-create-page sonas-create-page--wide">
+    <div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+            <div class="flex flex-wrap items-center gap-3 mb-1">
+                <h1>{{ sinistre.reference }}</h1>
+                <span class="sonas-badge sonas-badge-{% if sinistre.statut == 'VALIDE' %}green{% elif sinistre.statut == 'REJETE' %}red{% elif sinistre.en_attente_validation_gerant %}yellow{% elif sinistre.statut == 'EN_COURS' %}blue{% else %}yellow{% endif %}">
+                    {{ sinistre.statut_display_detail }}
+                </span>
+                {% if sinistre.is_urgent %}<span class="sonas-badge sonas-badge-red">Urgent</span>{% endif %}
+            </div>
+            <p>{{ sinistre.get_type_sinistre_display }} — Client : <a href="{% url 'clients_internal:detail' sinistre.contrat.client.pk %}" class="text-indigo-600 hover:underline">{{ sinistre.contrat.client.display_name }}</a></p>
+        </div>
+        <a href="{% url 'sinistres:list' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Sinistres</a>
+    </div>
+
+    {% include 'partials/form_guide_top.html' with guide_steps=workflow_steps guide_tip=workflow_tip guide_active_step=workflow_step %}
+
+    <div class="sonas-create-body space-y-6">
+        <div class="grid lg:grid-cols-2 gap-6">
+            <div class="sonas-card p-6">
+                <h2 class="font-bold mb-4">Informations</h2>
+                <dl class="space-y-3 text-sm">
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Date sinistre</dt><dd class="font-medium">{{ sinistre.date_sinistre|date:"d/m/Y" }}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Contrat</dt><dd class="font-medium"><a href="{% url 'contrats:detail' sinistre.contrat.pk %}" class="text-indigo-600 hover:underline">{{ sinistre.contrat.reference }}</a></dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{% if sinistre.plafond_indemnisation %}{{ sinistre.plafond_indemnisation }} €{% else %}—{% endif %}</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat dispo.</dt><dd class="font-medium">{{ sinistre.contrat.plafond_disponible }} €</dd></div>
+                    {% if sinistre.montant_estime %}
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant estimé</dt><dd class="font-medium">{{ sinistre.montant_estime }} €</dd></div>
+                    {% endif %}
+                    {% if sinistre.montant_indemnise is not None %}
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ sinistre.montant_indemnise }} €</dd></div>
+                    {% endif %}
+                    <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                        <dt class="text-slate-500 mb-1">Description</dt>
+                        <dd class="text-slate-700 dark:text-slate-300">{{ sinistre.description }}</dd>
+                    </div>
+                </dl>
+                {% if sinistre.statut == 'DECLARE' %}
+                <form method="post" action="{% url 'sinistres:update_status' sinistre.pk %}" class="mt-5">
+                    {% csrf_token %}
+                    <input type="hidden" name="statut" value="EN_COURS">
+                    <button type="submit" class="sonas-btn sonas-btn-primary sonas-btn-sm">Passer en cours</button>
+                </form>
+                {% endif %}
+            </div>
+
+            <div class="sonas-card p-6">
+                <h2 class="font-bold mb-4">Documents ({{ sinistre.documents.count }})</h2>
+                {% if sinistre.documents.all %}
+                <ul class="divide-y divide-slate-100 dark:divide-slate-700 mb-4">
+                    {% for doc in sinistre.documents.all %}
+                    <li class="py-2 text-sm"><a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank">{{ doc.titre }}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-sm text-slate-500 mb-4">Aucun document joint.</p>
+                {% endif %}
+                <a href="{% url 'documents:upload' %}?sinistre={{ sinistre.pk }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Ajouter un document</a>
+            </div>
+        </div>
+
+        {% if dossier_incomplet %}
+        <div class="sonas-card p-4 border-l-4 border-l-red-400 bg-red-50/40 dark:bg-red-950/15">
+            <p class="font-semibold text-red-800 dark:text-red-200">Dossier incomplet</p>
+            <p class="text-sm mt-1">La décision d'indemnisation de l'agent n'a pas été enregistrée. L'agent doit compléter le traitement ci-dessous avant validation gérant.</p>
+        </div>
+        {% endif %}
+
+        {% if can_traiter %}
+        <div class="sonas-card p-6 border-t-4 border-t-indigo-500">
+            <h2 class="font-bold mb-2">Traitement & indemnisation (Agent)</h2>
+            <p class="text-sm text-slate-500 mb-4">
+                Indiquez si une indemnisation est accordée. Sans indemnisation, aucun montant ne sera déduit du contrat à la validation gérant.
+            </p>
+            <form method="post" action="{% url 'sinistres:traiter' sinistre.pk %}" class="space-y-4 max-w-xl">
+                {% csrf_token %}
+                {% for field in traitement_form %}
+                <div>
+                    <label class="sonas-label" for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="text-red-500">*</span>{% endif %}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>{% endif %}
+                    {% if field.errors %}<p class="text-sm text-red-600 mt-1">{{ field.errors.0 }}</p>{% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="sonas-btn sonas-btn-primary">Transmettre au gérant pour validation</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if sinistre.soumis_validation and sinistre.statut == 'EN_COURS' %}
+        <div class="sonas-card p-6 border-l-4 border-l-amber-400 bg-amber-50/40 dark:bg-amber-950/15">
+            <h2 class="font-bold mb-3">Décision agent — en attente validation gérant</h2>
+            <dl class="grid sm:grid-cols-2 gap-4 text-sm">
+                <div>
+                    <dt class="text-slate-500">Indemnisation</dt>
+                    <dd class="font-semibold">
+                        {% if sinistre.indemnisation_accordee %}
+                        <span class="text-emerald-600">Accordée</span>
+                        {% else %}
+                        <span class="text-slate-700 dark:text-slate-300">Non accordée</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                {% if sinistre.indemnisation_accordee %}
+                <div>
+                    <dt class="text-slate-500">Montant proposé</dt>
+                    <dd class="font-semibold text-emerald-600">{{ sinistre.montant_indemnisation_propose }} €</dd>
+                </div>
+                {% endif %}
+                {% if sinistre.traite_par %}
+                <div>
+                    <dt class="text-slate-500">Traité par</dt>
+                    <dd class="font-medium">{{ sinistre.traite_par.get_full_name|default:sinistre.traite_par.username }}</dd>
+                </div>
+                {% endif %}
+                {% if sinistre.date_soumission %}
+                <div>
+                    <dt class="text-slate-500">Transmis le</dt>
+                    <dd class="font-medium">{{ sinistre.date_soumission|date:"d/m/Y H:i" }}</dd>
+                </div>
+                {% endif %}
+            </dl>
+            {% if sinistre.notes_traitement %}
+            <p class="text-sm text-slate-600 dark:text-slate-400 mt-4"><strong>Notes :</strong> {{ sinistre.notes_traitement }}</p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if can_validate %}
+        <div class="sonas-card p-6 border-t-4 border-t-violet-500">
+            <h2 class="font-bold mb-2">Clôture du sinistre (Gérant)</h2>
+            <p class="text-sm text-slate-500 mb-4">
+                {% if sinistre.indemnisation_accordee %}
+                En clôturant, l'indemnisation de {{ sinistre.montant_indemnisation_propose }} € sera lancée, le plafond contractuel déduit et le rapport généré.
+                {% else %}
+                En clôturant, le sinistre sera terminé sans déduction sur le contrat et sans rapport d'indemnisation.
+                {% endif %}
+            </p>
+            <form method="post" action="{% url 'sinistres:validate' sinistre.pk %}" class="space-y-4 max-w-xl">
+                {% csrf_token %}
+                <div>
+                    <label class="sonas-label" for="{{ validation_form.motif_rejet.id_for_label }}">{{ validation_form.motif_rejet.label }}</label>
+                    {{ validation_form.motif_rejet }}
+                    {% if validation_form.motif_rejet.errors %}<p class="text-sm text-red-600 mt-1">{{ validation_form.motif_rejet.errors.0 }}</p>{% endif %}
+                </div>
+                {% if validation_form.non_field_errors %}
+                <div class="px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 text-sm">
+                    {{ validation_form.non_field_errors.0 }}
+                </div>
+                {% endif %}
+                <div class="flex flex-wrap gap-3 pt-1">
+                    <button type="submit" name="action" value="cloturer" class="sonas-btn sonas-btn-primary">
+                        {% if sinistre.indemnisation_accordee %}Clôturer et lancer l'indemnisation{% else %}Clôturer le sinistre{% endif %}
+                    </button>
+                    <button type="submit" name="action" value="rejeter" class="sonas-btn sonas-btn-secondary">
+                        Rejeter le dossier
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% elif sinistre.en_attente_validation_gerant and not can_validate and not dossier_incomplet %}
+        <div class="sonas-card p-4 border-l-4 border-l-amber-400 bg-amber-50/40 dark:bg-amber-950/15">
+            <p class="font-semibold text-amber-800 dark:text-amber-200">En attente du gérant</p>
+            <p class="text-sm mt-1 text-slate-600 dark:text-slate-400">
+                Vous avez transmis ce dossier. Seul un gérant ou un administrateur peut valider l'indemnisation et clôturer le sinistre.
+            </p>
+        </div>
+        {% endif %}
+
+        {% if rapport %}
+        <div class="sonas-card p-6 border-l-4 border-l-emerald-500">
+            <h2 class="font-bold mb-4">Rapport d'indemnisation</h2>
+            <dl class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-4">
+                <div><dt class="text-slate-500">Référence</dt><dd class="font-medium">{{ rapport.reference }}</dd></div>
+                <div><dt class="text-slate-500">Indemnisé</dt><dd class="font-semibold text-emerald-600">{{ rapport.montant_indemnise }} €</dd></div>
+                <div><dt class="text-slate-500">Non couvert</dt><dd class="font-medium">{% if rapport.montant_non_couvert %}{{ rapport.montant_non_couvert }} €{% else %}0 €{% endif %}</dd></div>
+                <div><dt class="text-slate-500">Contrat après</dt><dd class="font-medium">{{ rapport.plafond_contrat_apres }} € restants</dd></div>
+            </dl>
+            <div class="flex flex-wrap gap-2">
+                <a href="{% url 'sinistres:rapport' rapport.pk %}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Voir le rapport complet</a>
+                {% if rapport.document %}<a href="{{ rapport.document.fichier.url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm" target="_blank" download>Télécharger</a>{% endif %}
+            </div>
+        </div>
+        {% elif sinistre.statut == 'VALIDE' and not sinistre.indemnisation_accordee %}
+        <div class="sonas-card p-6 border-l-4 border-l-slate-400">
+            <h2 class="font-bold mb-2">Clôture sans indemnisation</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Ce sinistre a été validé sans indemnisation. Aucun montant n'a été déduit du contrat.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

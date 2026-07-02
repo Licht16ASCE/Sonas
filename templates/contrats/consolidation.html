@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Consolider le dossier — {{ contrat.reference }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/contrat-visuel.css' %}">
+{% endblock %}
+{% block content %}
+<div class="sonas-create-page">
+    <div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+            <h1>Dossier enregistré</h1>
+            <p>Contrat <strong>{{ contrat.reference }}</strong></p>
+        </div>
+        <a href="{% url 'contrats_client:detail' contrat.pk %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">Voir le contrat</a>
+    </div>
+
+    {% include 'partials/form_guide_top.html' with guide_steps=guide_steps guide_tip=guide_tip guide_active_step=3 %}
+
+    <div class="sonas-create-body space-y-6">
+        <div class="sonas-card p-0 overflow-hidden border-emerald-200 dark:border-emerald-900/50">
+            <div class="flex flex-col sm:flex-row sm:items-center gap-4 p-5 bg-emerald-50/80 dark:bg-emerald-950/20">
+                <div class="w-12 h-12 shrink-0 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                    <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-emerald-800 dark:text-emerald-200">Contrat signé et PDF enregistré</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Votre version contractuelle est archivée dans votre dossier.</p>
+                </div>
+                {% if document_contrat %}
+                <a href="{{ document_contrat.fichier.url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm shrink-0 w-full sm:w-auto justify-center" target="_blank" download>Télécharger le PDF</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="sonas-card p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="contrat-section-num">3</span>
+                <h2 class="font-bold text-lg m-0">Consolider le dossier</h2>
+            </div>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-5">
+                Ajoutez les pièces complémentaires pour le bien
+                <strong class="text-slate-900 dark:text-white">{{ contrat.bien.reference }}</strong>
+                avant activation par un agent.
+            </p>
+            <ul class="space-y-3 mb-6">
+                <li class="flex gap-3 text-sm">
+                    <span class="sonas-badge sonas-badge-blue shrink-0 mt-0.5">1</span>
+                    <span>Justificatif de propriété ou bail</span>
+                </li>
+                <li class="flex gap-3 text-sm">
+                    <span class="sonas-badge sonas-badge-blue shrink-0 mt-0.5">2</span>
+                    <span>État des lieux ou inventaire (si applicable)</span>
+                </li>
+                <li class="flex gap-3 text-sm">
+                    <span class="sonas-badge sonas-badge-blue shrink-0 mt-0.5">3</span>
+                    <span>Tout document utile à l'instruction</span>
+                </li>
+            </ul>
+            <a href="{% url 'documents_client:upload' %}?bien={{ contrat.bien.pk }}" class="sonas-btn sonas-btn-primary w-full sm:w-auto justify-center">Uploader un document</a>
+
+            {% if documents_bien %}
+            <div class="mt-8 pt-6 border-t border-slate-200 dark:border-slate-700">
+                <h3 class="font-bold text-sm mb-3">Déjà uploadés ({{ documents_bien|length }})</h3>
+                <ul class="space-y-2 text-sm">
+                    {% for doc in documents_bien %}
+                    <li>
+                        <a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank">{{ doc.titre }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

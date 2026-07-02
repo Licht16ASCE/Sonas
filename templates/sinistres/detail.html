@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}{{ sinistre.reference }}{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-8">
+    <div>
+        <div class="flex flex-wrap items-center gap-3 mb-1">
+            <h1>{{ sinistre.reference }}</h1>
+            <span class="sonas-badge sonas-badge-{% if sinistre.statut == 'VALIDE' %}green{% elif sinistre.statut == 'REJETE' %}red{% elif sinistre.en_attente_validation_gerant %}yellow{% elif sinistre.statut == 'EN_COURS' %}blue{% else %}yellow{% endif %}">
+                {{ sinistre.statut_display_detail }}
+            </span>
+            {% if sinistre.is_urgent %}<span class="sonas-badge sonas-badge-red">Urgent</span>{% endif %}
+        </div>
+        <p>{{ sinistre.get_type_sinistre_display }} — Contrat {{ sinistre.contrat.reference }}</p>
+    </div>
+    <a href="{% url 'sinistres_client:list' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0">← Mes sinistres</a>
+</div>
+
+{% if sinistre.statut == 'DECLARE' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20">
+    <p class="font-semibold text-amber-800 dark:text-amber-200">Dossier déclaré</p>
+    <p class="text-sm text-amber-700/80 dark:text-amber-300/70 mt-1">Un agent va prendre en charge votre sinistre. Ajoutez des pièces justificatives pour accélérer le traitement.</p>
+</div>
+{% elif sinistre.en_attente_validation_gerant %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-amber-400 bg-amber-50/50 dark:bg-amber-950/20">
+    <p class="font-semibold text-amber-800 dark:text-amber-200">En attente de validation</p>
+    <p class="text-sm text-amber-700/80 dark:text-amber-300/70 mt-1">Votre dossier a été examiné par un agent et attend la validation d'un gérant.</p>
+</div>
+{% elif sinistre.statut == 'EN_COURS' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-indigo-400 bg-indigo-50/50 dark:bg-indigo-950/20">
+    <p class="font-semibold text-indigo-800 dark:text-indigo-200">Traitement en cours</p>
+    <p class="text-sm text-indigo-700/80 dark:text-indigo-300/70 mt-1">Un agent examine votre dossier.</p>
+</div>
+{% elif sinistre.statut == 'REJETE' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-red-400 bg-red-50/50 dark:bg-red-950/20">
+    <p class="font-semibold text-red-800 dark:text-red-200">Sinistre refusé</p>
+    {% if sinistre.motif_rejet %}<p class="text-sm mt-1">{{ sinistre.motif_rejet }}</p>{% endif %}
+</div>
+{% elif sinistre.statut == 'VALIDE' %}
+<div class="mb-6 sonas-card p-4 border-l-4 border-l-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/20">
+    <p class="font-semibold text-emerald-800 dark:text-emerald-200">
+        {% if sinistre.indemnisation_accordee %}Sinistre validé et indemnisé{% else %}Sinistre validé{% endif %}
+    </p>
+    <p class="text-sm text-emerald-700/80 dark:text-emerald-300/70 mt-1">
+        Décision enregistrée le {% if sinistre.date_validation %}{{ sinistre.date_validation|date:"d/m/Y" }}{% else %}—{% endif %}.
+        {% if sinistre.montant_indemnise %} Montant indemnisé : <strong>{{ sinistre.montant_indemnise }} €</strong>.
+        {% elif not sinistre.indemnisation_accordee %} Aucune indemnisation n'a été accordée.{% endif %}
+    </p>
+</div>
+{% endif %}
+
+<div class="grid lg:grid-cols-2 gap-6">
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Détails du sinistre</h2>
+        <dl class="space-y-3 text-sm">
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Date du sinistre</dt><dd class="font-medium">{{ sinistre.date_sinistre|date:"d/m/Y" }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Déclaré le</dt><dd class="font-medium">{{ sinistre.created_at|date:"d/m/Y" }}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Bien concerné</dt><dd class="font-medium"><a href="{% url 'biens_client:detail' sinistre.contrat.bien.pk %}" class="text-indigo-600 hover:underline">{{ sinistre.contrat.bien.reference }}</a></dd></div>
+            {% if sinistre.montant_estime %}
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant estimé</dt><dd class="font-medium">{{ sinistre.montant_estime }} €</dd></div>
+            {% endif %}
+            {% if sinistre.plafond_indemnisation %}
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{{ sinistre.plafond_indemnisation }} €</dd></div>
+            {% endif %}
+            {% if sinistre.montant_indemnise is not None %}
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ sinistre.montant_indemnise }} €</dd></div>
+            {% endif %}
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
+                <dt class="text-slate-500 mb-1">Description</dt>
+                <dd class="text-slate-700 dark:text-slate-300">{{ sinistre.description }}</dd>
+            </div>
+        </dl>
+        <a href="{% url 'documents_client:upload' %}?sinistre={{ sinistre.pk }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-5">Ajouter un document</a>
+    </div>
+
+    <div class="sonas-card p-6">
+        <h2 class="font-bold mb-4">Documents ({{ sinistre.documents.count }})</h2>
+        {% if sinistre.documents.all %}
+        <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+            {% for doc in sinistre.documents.all %}
+            <li class="py-3 flex justify-between items-center gap-3 text-sm">
+                <a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium truncate" target="_blank">{{ doc.titre }}</a>
+                <span class="text-slate-400 shrink-0">{{ doc.created_at|date:"d/m/Y" }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-slate-500 mb-4">Aucun document. Les photos et devis accélèrent le traitement.</p>
+        <a href="{% url 'documents_client:upload' %}?sinistre={{ sinistre.pk }}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Uploader un document</a>
+        {% endif %}
+    </div>
+</div>
+
+{% if rapport %}
+<div class="mt-6 sonas-card p-6 border-l-4 border-l-emerald-500">
+    <h2 class="font-bold mb-4">Votre rapport d'indemnisation</h2>
+    <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+        Un montant de <strong class="text-emerald-600">{{ rapport.montant_indemnise }} €</strong> a été enregistré.
+        {% if rapport.montant_non_couvert %} {{ rapport.montant_non_couvert }} € n'ont pas pu être couverts par le contrat.{% endif %}
+    </p>
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'sinistres_client:rapport' rapport.pk %}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Consulter le rapport</a>
+        {% if rapport.document %}<a href="{{ rapport.document.fichier.url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm" target="_blank" download>Télécharger ma copie</a>{% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

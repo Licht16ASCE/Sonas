@@ -1,0 +1,8 @@
+<div class="flex flex-wrap gap-2 mb-6">
+    {% for key, label in filter_choices %}
+    <a href="?filter={{ key }}{% if search %}&q={{ search }}{% endif %}"
+       class="sonas-filter-pill {% if active_filter == key %}sonas-filter-pill-active{% else %}sonas-filter-pill-inactive{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>

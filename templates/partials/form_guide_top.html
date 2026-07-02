@@ -1,0 +1,37 @@
+{# Bandeau parcours + astuce — toujours AU-DESSUS du formulaire #}
+{# guide_steps, guide_tip, guide_tip_title (défaut Astuce), guide_active_step (défaut 1) #}
+{% if guide_steps or guide_tip %}
+<div class="sonas-form-guide">
+    <div class="sonas-form-guide-panel">
+        {% if guide_steps %}
+        <div class="sonas-form-guide-steps">
+            <p class="sonas-form-guide-heading">
+                <svg class="sonas-form-guide-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                Parcours
+            </p>
+            <ol class="sonas-form-guide-track">
+                {% for step in guide_steps %}
+                <li class="sonas-form-guide-step {% if guide_active_step == forloop.counter %}is-active{% elif guide_active_step > forloop.counter %}is-done{% endif %}">
+                    <div class="sonas-form-guide-step-inner">
+                        <span class="sonas-form-guide-dot" aria-hidden="true">
+                            {% if guide_active_step > forloop.counter %}✓{% else %}{{ forloop.counter }}{% endif %}
+                        </span>
+                        <span class="sonas-form-guide-text">{{ step }}</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ol>
+        </div>
+        {% endif %}
+        {% if guide_tip %}
+        <div class="sonas-form-guide-tip">
+            <p class="sonas-form-guide-heading">
+                <svg class="sonas-form-guide-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {{ guide_tip_title|default:"Astuce" }}
+            </p>
+            <p class="sonas-form-guide-tip-body">{{ guide_tip }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Documents{% endblock %}
+{% block content %}
+<div class="sonas-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+    <div>
+        <h1>{% if user.is_client %}Mes documents{% else %}Documents{% endif %}</h1>
+        <p>{% if is_internal_list %}Consultation et recherche de tous les documents du système{% else %}Justificatifs liés aux biens et pièces jointes des sinistres{% endif %}</p>
+    </div>
+    <a href="{% if user.is_client %}{% url 'documents_client:upload' %}{% else %}{% url 'documents:upload' %}{% endif %}" class="sonas-btn sonas-btn-primary shrink-0">Uploader</a>
+</div>
+
+{% if is_internal_list %}
+<form method="get" class="sonas-card p-4 mb-6 flex flex-col lg:flex-row flex-wrap gap-4 items-end">
+    <div class="flex-1 min-w-[200px] w-full lg:w-auto">
+        <label for="doc-search" class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Recherche</label>
+        <input type="search" id="doc-search" name="q" value="{{ search }}" placeholder="Titre, client, référence…" class="sonas-input w-full">
+    </div>
+    <div class="w-full sm:w-auto min-w-[200px]">
+        <label for="doc-client" class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Client</label>
+        <select id="doc-client" name="client" class="sonas-input w-full">
+            <option value="">Tous les clients</option>
+            {% for c in filter_clients %}
+            <option value="{{ c.pk }}" {% if active_client == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.display_name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="w-full sm:w-auto min-w-[180px]">
+        <label for="doc-type" class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Type</label>
+        <select id="doc-type" name="type" class="sonas-input w-full">
+            <option value="">Tous les types</option>
+            {% for value, label in document_types %}
+            <option value="{{ value }}" {% if active_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="flex gap-2 w-full sm:w-auto">
+        <button type="submit" class="sonas-btn sonas-btn-primary flex-1 sm:flex-none">Filtrer</button>
+        {% if active_client or active_type or search %}
+        <a href="{% url 'documents:list' %}" class="sonas-btn sonas-btn-secondary flex-1 sm:flex-none">Réinitialiser</a>
+        {% endif %}
+    </div>
+</form>
+<p class="text-sm text-slate-500 mb-4">{{ results_count }} document{{ results_count|pluralize }} trouvé{{ results_count|pluralize }}</p>
+{% endif %}
+
+<div class="lg:hidden space-y-3">
+    {% for doc in documents %}
+    <div class="sonas-card p-4">
+        <div class="flex justify-between items-start gap-3 mb-2">
+            <a href="{{ doc.fichier.url }}" class="font-semibold text-indigo-600 hover:underline" target="_blank" rel="noopener">{{ doc.titre }}</a>
+            <span class="text-xs text-slate-400 shrink-0">{{ doc.created_at|date:"d/m/Y" }}</span>
+        </div>
+        <p class="text-sm text-slate-500 mb-2">{{ doc.get_type_document_display }}</p>
+        {% if is_internal_list and doc.client %}
+        <p class="text-sm text-slate-600 dark:text-slate-300 mb-2">{{ doc.client.display_name }}</p>
+        {% endif %}
+        <div class="flex flex-wrap items-center gap-2 text-sm">
+            {% if doc.contrat %}
+            <span class="sonas-badge sonas-badge-gray">Contrat</span>
+            <a href="{% url 'contrats:detail' doc.contrat.pk %}" class="text-indigo-600 hover:underline">{{ doc.contrat.reference }}</a>
+            {% elif doc.sinistre %}
+            <span class="sonas-badge sonas-badge-yellow">Sinistre</span>
+            <a href="{% if user.is_client %}{% url 'sinistres_client:detail' doc.sinistre.pk %}{% else %}{% url 'sinistres:detail' doc.sinistre.pk %}{% endif %}" class="text-indigo-600 hover:underline">{{ doc.sinistre.reference }}</a>
+            {% elif doc.bien %}
+            <span class="sonas-badge sonas-badge-blue">Bien</span>
+            <a href="{% if user.is_client %}{% url 'biens_client:detail' doc.bien.pk %}{% else %}{% url 'biens:detail' doc.bien.pk %}{% endif %}" class="text-indigo-600 hover:underline">{{ doc.bien.reference }}</a>
+            {% else %}—{% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="sonas-card p-8 text-center text-slate-500">Aucun document{% if is_internal_list %} ne correspond aux critères{% endif %}.</div>
+    {% endfor %}
+</div>
+
+<div class="hidden lg:block sonas-card overflow-hidden sonas-table-wrap">
+    <table class="sonas-table">
+        <thead><tr>
+            <th>Titre</th>
+            <th>Type</th>
+            {% if is_internal_list %}<th>Client</th>{% endif %}
+            <th>Associé à</th>
+            <th>Date</th>
+        </tr></thead>
+        <tbody>
+            {% for doc in documents %}
+            <tr>
+                <td><a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank" rel="noopener">{{ doc.titre }}</a></td>
+                <td>{{ doc.get_type_document_display }}</td>
+                {% if is_internal_list %}
+                <td class="text-slate-600">{% if doc.client %}{{ doc.client.display_name }}{% else %}—{% endif %}</td>
+                {% endif %}
+                <td>
+                    {% if doc.contrat %}
+                    <span class="sonas-badge sonas-badge-gray">Contrat</span>
+                    <a href="{% url 'contrats:detail' doc.contrat.pk %}" class="text-indigo-600 hover:underline ml-1">{{ doc.contrat.reference }}</a>
+                    {% elif doc.sinistre %}
+                    <span class="sonas-badge sonas-badge-yellow">Sinistre</span>
+                    <a href="{% if user.is_client %}{% url 'sinistres_client:detail' doc.sinistre.pk %}{% else %}{% url 'sinistres:detail' doc.sinistre.pk %}{% endif %}" class="text-indigo-600 hover:underline ml-1">{{ doc.sinistre.reference }}</a>
+                    {% elif doc.bien %}
+                    <span class="sonas-badge sonas-badge-blue">Bien</span>
+                    <a href="{% if user.is_client %}{% url 'biens_client:detail' doc.bien.pk %}{% else %}{% url 'biens:detail' doc.bien.pk %}{% endif %}" class="text-indigo-600 hover:underline ml-1">{{ doc.bien.reference }}</a>
+                    {% else %}—{% endif %}
+                </td>
+                <td class="text-slate-500">{{ doc.created_at|date:"d/m/Y" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="{% if is_internal_list %}5{% else %}4{% endif %}" class="p-8 text-center text-slate-500">Aucun document{% if is_internal_list %} ne correspond aux critères{% endif %}.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

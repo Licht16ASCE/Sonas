@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Clients{% endblock %}
+{% block content %}
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div class="sonas-page-header mb-0">
+        <h1>Clients</h1>
+        <p>Gérez vos clients et leurs dossiers</p>
+    </div>
+    <a href="{% url 'clients_internal:create' %}" class="sonas-btn sonas-btn-primary shrink-0">Nouveau client</a>
+</div>
+<form method="get" class="mb-6">
+    <input type="search" name="q" value="{{ search }}" placeholder="Rechercher par nom, email..." class="sonas-input w-full max-w-md">
+</form>
+
+<div class="lg:hidden space-y-3">
+    {% for c in clients %}
+    <a href="{% url 'clients_internal:detail' c.pk %}" class="sonas-card sonas-mobile-card block p-4">
+        <div class="flex justify-between items-start gap-3 mb-2">
+            <span class="font-semibold text-slate-900 dark:text-white">{{ c.display_name }}</span>
+            {% if c.is_active %}<span class="sonas-badge sonas-badge-green shrink-0">Actif</span>{% else %}<span class="sonas-badge sonas-badge-gray shrink-0">Inactif</span>{% endif %}
+        </div>
+        <p class="text-sm text-slate-500">{{ c.email }}</p>
+        {% if c.ville_affichage %}<p class="text-sm text-slate-500 mt-1">{{ c.ville_affichage }}</p>{% endif %}
+    </a>
+    {% empty %}
+    <div class="sonas-card p-8 text-center text-slate-500">Aucun client trouvé.</div>
+    {% endfor %}
+</div>
+
+<div class="hidden lg:block sonas-card overflow-hidden sonas-table-wrap">
+    <table class="sonas-table">
+        <thead><tr>
+            <th>Nom</th><th>Email</th><th>Ville</th><th>Statut</th><th></th>
+        </tr></thead>
+        <tbody>
+            {% for c in clients %}
+            <tr>
+                <td class="font-semibold">{{ c.display_name }}</td>
+                <td class="text-slate-500">{{ c.email }}</td>
+                <td>{{ c.ville_affichage|default:"—" }}</td>
+                <td>{% if c.is_active %}<span class="sonas-badge sonas-badge-green">Actif</span>{% else %}<span class="sonas-badge sonas-badge-gray">Inactif</span>{% endif %}</td>
+                <td><a href="{% url 'clients_internal:detail' c.pk %}" class="text-sm font-semibold text-indigo-600 hover:underline">Voir →</a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" class="text-center text-slate-500 py-12">Aucun client trouvé.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

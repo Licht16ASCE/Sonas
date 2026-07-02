@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }}{% endblock %}
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/contrat-visuel.css' %}">
+{% endblock %}
+{% block content %}
+<div class="sonas-create-page sonas-create-page--wide contrat-visuel-page">
+    <div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+            <h1>{{ title }}</h1>
+            <p>Lisez le contrat et complétez uniquement les zones prévues à cet effet.</p>
+        </div>
+        <a href="{% url 'contrats_client:list' %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm shrink-0 hidden sm:inline-flex">← Mes contrats</a>
+    </div>
+
+    {% if biens_eligibles == 0 %}
+    <div class="sonas-create-body">
+        <div class="sonas-card p-8 text-center">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h2 class="font-bold text-lg mb-2">Aucun bien éligible</h2>
+            {% if biens_en_attente %}
+            <p class="text-sm text-slate-500 mb-4">Vous avez {{ biens_en_attente }} bien(s) en attente de validation.</p>
+            {% else %}
+            <p class="text-sm text-slate-500 mb-4">Déclarez d'abord un bien et attendez sa validation par un agent.</p>
+            {% endif %}
+            <div class="flex flex-wrap gap-3 justify-center">
+                <a href="{% url 'biens_client:create' %}" class="sonas-btn sonas-btn-primary">Déclarer un bien</a>
+                <a href="{% url 'biens_client:list' %}" class="sonas-btn sonas-btn-secondary">Voir mes biens</a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    {% include 'partials/form_guide_top.html' with guide_steps=guide_steps guide_tip=guide_tip guide_active_step=1 %}
+
+    <div class="sonas-create-body">
+        <form method="post" id="contrat-visuel-form">
+            {% csrf_token %}
+            {% include 'contrats/partials/contrat_visuel_corps.html' with contrat=contrat_preview client=client form=form readonly=False signature_date=now %}
+
+            {% if form.non_field_errors %}
+            <div class="mt-4 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 text-red-600 text-sm border border-red-200 dark:border-red-900/50">
+                {{ form.non_field_errors.0 }}
+            </div>
+            {% endif %}
+
+            <div class="contrat-form-actions hidden sm:flex">
+                <a href="{% url 'contrats_client:list' %}" class="sonas-btn sonas-btn-secondary">Annuler</a>
+                <button type="submit" class="sonas-btn sonas-btn-primary">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    Signer et enregistrer
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="contrat-mobile-bar sm:hidden">
+        <a href="{% url 'contrats_client:list' %}" class="sonas-btn sonas-btn-secondary">Annuler</a>
+        <button type="submit" form="contrat-visuel-form" class="sonas-btn sonas-btn-primary">Signer le contrat</button>
+    </div>
+    {% endif %}
+</div>
+
+{% if biens_eligibles %}
+{{ biens_meta|json_script:"biens-meta-data" }}
+<script>
+(function () {
+    const metaEl = document.getElementById('biens-meta-data');
+    if (!metaEl) return;
+    const biens = JSON.parse(metaEl.textContent);
+    const select = document.getElementById('id_bien_contrat');
+    const preview = document.getElementById('contrat-bien-preview');
+    function updatePreview() {
+        const b = biens[select.value];
+        if (!b || !preview) return;
+        if (!select.value) {
+            preview.textContent = '';
+            return;
+        }
+        preview.innerHTML =
+            '<strong>' + b.reference + '</strong> · ' + b.type +
+            '<br><span style="opacity:0.85">' + b.adresse + ', ' + b.code_postal + ' ' + b.ville +
+            (b.surface ? ' · ' + b.surface + ' m²' : '') + '</span>';
+    }
+    if (select) {
+        select.addEventListener('change', updatePreview);
+        updatePreview();
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}
