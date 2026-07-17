@@ -42,9 +42,12 @@ def bien_create_client(request):
             bien.client = client
             bien.statut = BienStatut.EN_ATTENTE
             bien.save()
+            from contrats.workflow import generer_police_et_contrat
+            contrat, police = generer_police_et_contrat(bien, request.user, grille=bien.grille_tarifaire)
             log_client_activity(
                 client, ActiviteClient.TypeActivite.BIEN_CREE,
-                f'Bien déclaré : {bien.reference}', request.user
+                f'Bien déclaré : {bien.reference} — contrat {contrat.reference} / police {police.reference}',
+                request.user
             )
             create_pending_action(
                 user=request.user,
@@ -57,7 +60,10 @@ def bien_create_client(request):
                 user=request.user,
                 notif_type='STATUT_CHANGE',
                 title='Bien déclaré',
-                message=f'Votre bien {bien.reference} est en attente de validation.',
+                message=(
+                    f'Votre bien {bien.reference} est en attente de validation. '
+                    f'Contrat {contrat.reference} et bon de paiement générés automatiquement.'
+                ),
                 obj=bien,
             )
             notify_staff(
@@ -68,8 +74,12 @@ def bien_create_client(request):
                 pending_title=f'Valider le bien {bien.reference}',
                 pending_description=f'Client : {client.display_name} — {bien.adresse}, {bien.ville}',
             )
-            messages.success(request, 'Bien déclaré avec succès. Ajoutez vos documents justificatifs.')
-            return redirect('biens_client:detail', pk=bien.pk)
+            messages.success(
+                request,
+                'Bien déclaré. Police, contrat (en attente) et bon de paiement générés. '
+                'Téléchargez le bon, payez en banque puis déposez la preuve.',
+            )
+            return redirect('contrats_client:detail', pk=contrat.pk)
     else:
         form = BienForm()
     return render(request, 'biens/form.html', {
@@ -77,11 +87,11 @@ def bien_create_client(request):
         'title': 'Déclarer un bien',
         'guide_steps': [
             'Vous déclarez le bien',
-            'Vous uploadez les justificatifs',
-            'Un agent valide le bien',
-            'Vous souscrivez un contrat',
+            'Police + contrat + bon de paiement générés',
+            'Vous uploadez justificatifs et preuve de paiement',
+            'Un agent valide le bien et le paiement',
         ],
-        'guide_tip': 'Après la déclaration, ajoutez au moins un justificatif (titre de propriété, bail…) pour accélérer la validation.',
+        'guide_tip': 'La valeur estimée (USD) et le forfait déterminent automatiquement la prime. Après déclaration, téléchargez le bon de paiement.',
     })
 
 
@@ -95,12 +105,9 @@ def bien_detail_client(request, pk):
     from contrats.models import Contrat, ContratStatut
     contrat_actif = Contrat.objects.filter(
         client=client, bien=bien,
-        statut__in=(ContratStatut.BROUILLON, ContratStatut.ACTIF),
+        statut__in=(ContratStatut.EN_ATTENTE, ContratStatut.BROUILLON, ContratStatut.ACTIF),
     ).first()
-    peut_souscrire = (
-        bien.statut == BienStatut.VALIDE
-        and not contrat_actif
-    )
+    peut_souscrire = False
     return render(request, 'biens/detail.html', {
         'bien': bien,
         'contrat_actif': contrat_actif,
@@ -155,6 +162,8 @@ def bien_create(request):
             bien = form.save(commit=False)
             bien.client = client
             bien.save()
+            from contrats.workflow import generer_police_et_contrat
+            generer_police_et_contrat(bien, request.user, grille=bien.grille_tarifaire)
             if bien.statut == BienStatut.EN_ATTENTE:
                 notify_staff(
                     title=f'Bien {bien.reference} à valider',
@@ -165,7 +174,7 @@ def bien_create(request):
                     pending_description=f'Client : {client.display_name}',
                     exclude_user=request.user,
                 )
-            messages.success(request, 'Bien créé.')
+            messages.success(request, 'Bien créé — police, contrat et bon de paiement générés.')
             return redirect('biens:detail', pk=bien.pk)
     else:
         form = BienForm()
@@ -180,11 +189,11 @@ def bien_create(request):
         'client_select_url': reverse('biens:create'),
         'help_steps': [
             'Sélectionnez le client propriétaire',
-            'Renseignez l\'adresse et le type de bien',
-            'Le bien passera en attente de validation',
-            'Ajoutez des justificatifs depuis la fiche bien',
+            'Renseignez l\'adresse, la valeur (USD) et le forfait',
+            'Police + contrat EN ATTENTE + bon de paiement générés',
+            'Le client dépose preuve de paiement et justificatifs',
         ],
-        'help_note': 'Un bien validé est requis avant de souscrire un contrat.',
+        'help_note': 'Le contrat reste en attente jusqu\'à documents + paiement validés.',
     })
 
 

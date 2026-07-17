@@ -27,6 +27,21 @@ class Bien(models.Model):
     code_postal = models.CharField(max_length=10)
     ville = models.CharField(max_length=100)
     surface_m2 = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    valeur_estimee = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text='Valeur estimée du bien en USD (utilisée pour la grille tarifaire).',
+    )
+    grille_tarifaire = models.ForeignKey(
+        'contrats.GrilleTarifaire',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='biens',
+        verbose_name='Forfait d\'assurance',
+    )
     description = models.TextField(blank=True)
     statut = models.CharField(max_length=15, choices=BienStatut.choices, default=BienStatut.EN_ATTENTE)
     motif_rejet = models.TextField(blank=True)

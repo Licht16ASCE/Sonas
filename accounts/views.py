@@ -123,7 +123,7 @@ def settings_view(request):
                 messages.success(request, 'Préférence d\'affichage enregistrée.')
                 return _settings_redirect('appearance')
             active_section = 'appearance'
-
+ 
     theme_choices = User._meta.get_field('theme_preference').choices
     return render(request, 'accounts/settings.html', {
         'account_form': account_form,

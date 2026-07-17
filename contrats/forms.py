@@ -22,7 +22,7 @@ class ContratForm(forms.ModelForm):
             'plafond_indemnisation': forms.NumberInput(attrs={'step': '0.01', 'min': '0', 'placeholder': '50000.00'}),
         }
         labels = {
-            'plafond_indemnisation': 'Plafond d\'indemnisation (€)',
+            'plafond_indemnisation': 'Plafond d\'indemnisation (USD)',
         }
 
     def __init__(self, *args, client=None, **kwargs):
@@ -84,8 +84,8 @@ class ClientContratForm(forms.ModelForm):
             'bien': 'Bien à assurer',
             'date_debut': 'Date de début',
             'date_fin': 'Date de fin',
-            'montant_annuel': 'Prime annuelle (€)',
-            'plafond_indemnisation': 'Plafond d\'indemnisation (€)',
+            'montant_annuel': 'Prime annuelle (USD)',
+            'plafond_indemnisation': 'Plafond d\'indemnisation (USD)',
             'notes': 'Observations du souscripteur',
         }
 
@@ -101,7 +101,7 @@ class ClientContratForm(forms.ModelForm):
         if client:
             biens_pris = Contrat.objects.filter(
                 client=client,
-                statut__in=(ContratStatut.BROUILLON, ContratStatut.ACTIF),
+                statut__in=(ContratStatut.EN_ATTENTE, ContratStatut.BROUILLON, ContratStatut.ACTIF),
             ).values_list('bien_id', flat=True)
             qs = Bien.objects.filter(
                 client=client, statut=BienStatut.VALIDE,
@@ -118,7 +118,7 @@ class ClientContratForm(forms.ModelForm):
             existe = Contrat.objects.filter(
                 client=self.client,
                 bien=bien,
-                statut__in=(ContratStatut.BROUILLON, ContratStatut.ACTIF),
+                statut__in=(ContratStatut.EN_ATTENTE, ContratStatut.BROUILLON, ContratStatut.ACTIF),
             ).exists()
             if existe:
                 raise ValidationError('Un contrat existe déjà pour ce bien.')
@@ -134,3 +134,14 @@ class ClientContratForm(forms.ModelForm):
         if bien and not bien.is_validated:
             raise ValidationError('Seuls les biens validés peuvent être souscrits.')
         return cleaned
+
+
+class PreuvePaiementForm(forms.Form):
+    fichier = forms.FileField(
+        label='Preuve de paiement (PDF ou image)',
+        help_text='Reçu bancaire, bordereau de virement…',
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        apply_form_styles(self)

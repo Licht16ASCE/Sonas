@@ -42,6 +42,7 @@ class SonasPasswordChangeForm(PasswordChangeForm):
         self.fields['new_password2'].label = 'Confirmer le nouveau mot de passe'
 
 
+
 class LoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

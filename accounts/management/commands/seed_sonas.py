@@ -48,9 +48,9 @@ class Command(BaseCommand):
             user=client_user,
             defaults={
                 'raison_sociale': 'Dupont Immobilier',
-                'adresse': '12 rue de la Paix',
-                'code_postal': '75001',
-                'ville': 'Paris',
+                'adresse': '12 avenue Kasa-Vubu',
+                'code_postal': '01234',
+                'ville': 'Kinshasa',
             },
         )
 
@@ -59,9 +59,9 @@ class Command(BaseCommand):
             defaults={
                 'client': client,
                 'type_bien': BienType.APPARTEMENT,
-                'adresse': '12 rue de la Paix',
-                'code_postal': '75001',
-                'ville': 'Paris',
+                'adresse': 'Boulevard du 30 Juin',
+                'code_postal': '01234',
+                'ville': 'Kinshasa',
                 'surface_m2': 85,
                 'statut': BienStatut.VALIDE,
             },
@@ -82,7 +82,7 @@ class Command(BaseCommand):
             },
         )
         if created:
-            self.stdout.write('  + Contrat demo (expire J-20, plafond 50 000 €)')
+            self.stdout.write('  + Contrat demo (expire J-20, plafond 50 000 $)')
         else:
             Contrat.objects.filter(reference='CTR-DEMO-001').update(plafond_indemnisation=50000)
 
@@ -90,3 +90,7 @@ class Command(BaseCommand):
         self.stdout.write('Comptes (mot de passe: sonas2024):')
         self.stdout.write('  admin / gerant / agent -> /sonas/')
         self.stdout.write('  client1 -> /client/')
+
+        from contrats.workflow import ensure_default_grilles
+        ensure_default_grilles()
+        self.stdout.write('  + Grille tarifaire USD')

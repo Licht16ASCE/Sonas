@@ -195,3 +195,6 @@ LOGGING = {
 
 # Créer le dossier logs si absent
 (BASE_DIR / 'logs').mkdir(exist_ok=True)
+
+# PDF Playwright (même stack que WeddingPlanner)
+PLAYWRIGHT_BROWSERS_PATH = BASE_DIR / '.playwright-browsers'
