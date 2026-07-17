@@ -9,7 +9,8 @@ from django.utils import timezone
 from notifications.models import NotificationType
 from notifications.services import create_notification, notify_staff, STAFF_ROLES_ALL
 from core.currency import format_usd
-from contrats.services import generate_rapport_indemnisation_pdf, generate_retrait_bancaire_pdf
+from contrats.services import generate_retrait_bancaire_pdf
+from sinistres.pdf_docs import generate_rapport_indemnisation_pdf
 
 from .models import RapportIndemnisation, Sinistre, SinistreStatut, StatutRetraitPaiement
 
