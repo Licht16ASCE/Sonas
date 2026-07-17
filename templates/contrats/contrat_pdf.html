@@ -1,276 +1,146 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <title>Contrat {{ contrat.reference }}</title>
-    <style>
-        @page {
-            size: A4;
-            margin: 1.8cm 2cm 2.2cm 2cm;
-            @frame footer {
-                -pdf-frame-content: footerContent;
-                bottom: 0.6cm;
-                margin-left: 2cm;
-                margin-right: 2cm;
-                height: 1cm;
-            }
-        }
-        body {
-            font-family: "Times-Roman", Times, "Times New Roman", serif;
-            font-size: 10.5pt;
-            line-height: 1.55;
-            color: #1a1a2e;
-        }
-        .pdf-header-bar {
-            background-color: #4338ca;
-            color: #ffffff;
-            text-align: center;
-            padding: 14pt 12pt;
-            margin: -0.2cm -0.2cm 16pt -0.2cm;
-        }
-        .pdf-header-bar h1 {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 13pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin: 0 0 4pt 0;
-            color: #ffffff;
-        }
-        .pdf-header-bar .brand {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 8.5pt;
-            margin: 0;
-            opacity: 0.95;
-        }
-        .pdf-meta {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 8.5pt;
-            text-align: center;
-            margin-bottom: 14pt;
-            color: #475569;
-        }
-        .pdf-meta strong { color: #312e81; }
-        h2.article {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 9.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: #312e81;
-            border-bottom: 0.75pt solid #c7d2fe;
-            padding-bottom: 3pt;
-            margin: 16pt 0 8pt 0;
-            page-break-after: avoid;
-        }
-        p, li {
-            margin: 0 0 8pt 0;
-            text-align: justify;
-        }
-        .exposé {
-            font-style: italic;
-            background-color: #f8fafc;
-            border-left: 3pt solid #6366f1;
-            padding: 8pt 10pt;
-            margin-bottom: 12pt;
-        }
-        .parties-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10pt 0 14pt 0;
-            font-size: 10pt;
-        }
-        .parties-table td {
-            vertical-align: top;
-            padding: 8pt 10pt;
-            border: 0.5pt solid #e2e8f0;
-            width: 50%;
-        }
-        .parties-table .party-label {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 7.5pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #6366f1;
-            margin-bottom: 4pt;
-        }
-        .highlight {
-            font-weight: bold;
-            color: #1e1b4b;
-        }
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 8pt 0 12pt 0;
-            font-size: 10pt;
-        }
-        .data-table th {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 8pt;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            background-color: #eef2ff;
-            color: #3730a3;
-            padding: 6pt 8pt;
-            border: 0.5pt solid #c7d2fe;
-            text-align: left;
-        }
-        .data-table td {
-            padding: 6pt 8pt;
-            border: 0.5pt solid #e2e8f0;
-        }
-        ul.contract-list {
-            margin: 4pt 0 8pt 16pt;
-            padding: 0;
-        }
-        ul.contract-list li {
-            margin-bottom: 4pt;
-            text-align: justify;
-        }
-        .signatures {
-            margin-top: 22pt;
-            page-break-inside: avoid;
-        }
-        .signatures table { width: 100%; border-collapse: collapse; }
-        .signatures td {
-            width: 48%;
-            vertical-align: top;
-            padding: 10pt;
-            border: 0.5pt solid #e2e8f0;
-        }
-        .sig-label {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 8pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #6366f1;
-        }
-        .sig-line {
-            margin-top: 28pt;
-            border-top: 0.5pt solid #94a3b8;
-            padding-top: 6pt;
-            font-size: 8.5pt;
-            color: #64748b;
-            font-style: italic;
-        }
-        #footerContent {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 7.5pt;
-            color: #94a3b8;
-            text-align: center;
-            border-top: 0.5pt solid #e2e8f0;
-            padding-top: 4pt;
-        }
-    </style>
-</head>
-<body>
+{% extends 'documents/pdf_base.html' %}
+{% block document_body %}
+{% include 'documents/partials/od_letterhead.html' with doc_kind="Contrat d'assurance" doc_ref=contrat.reference doc_date=signature_date|date:"d/m/Y à H:i" %}
 
-    <div class="pdf-header-bar">
-        <h1>Contrat d'assurance multirisque habitation</h1>
-        <p class="brand">SONAS ASSURANCES — Conditions particulières</p>
+<div class="od-doc-title">
+    <p class="od-doc-kicker">Conditions particulières</p>
+    <h1>Contrat d'assurance<br>multirisque habitation</h1>
+    <span class="od-ref">{{ contrat.reference }}</span>
+</div>
+
+<p class="od-meta-line">
+    Statut : <strong>{{ contrat.get_statut_display }}</strong>
+    · Souscription le <strong>{{ signature_date|date:"d/m/Y à H:i" }}</strong>
+    · Devise <strong>USD ($)</strong>
+</p>
+
+<div class="od-note">
+    <strong>Exposé préalable —</strong>
+    Le Souscripteur souhaite garantir le bien immobilier désigné ci-après contre les risques couverts
+    par la police multirisque habitation SONAS. L'Assureur accepte de couvrir ledit risque aux conditions
+    définies dans les présentes conditions particulières et dans les Conditions Générales SONAS (CG SONAS)
+    en vigueur, dont le Souscripteur reconnaît avoir pris connaissance.
+</div>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">I</span>
+        <h2>Identification des parties</h2>
     </div>
-
-    <p class="pdf-meta">
-        <strong>Référence contractuelle :</strong> {{ contrat.reference }} &nbsp;|&nbsp;
-        <strong>Date de souscription :</strong> {{ signature_date|date:"d/m/Y à H:i" }} &nbsp;|&nbsp;
-        <strong>Statut :</strong> {{ contrat.get_statut_display }}
-    </p>
-
-    <div class="exposé">
-        <p style="margin:0">
-            <strong>EXPOSÉ PRÉALABLE :</strong> Le Souscripteur souhaite garantir le bien immobilier désigné ci-après
-            contre les risques couverts par la police multirisque habitation SONAS. L'Assureur, après examen
-            du dossier, accepte de couvrir ledit risque aux conditions définies dans les présentes conditions
-            particulières et dans les Conditions Générales SONAS (CG SONAS) en vigueur, dont le Souscripteur
-            reconnaît avoir pris connaissance.
-        </p>
-    </div>
-
-    <h2 class="article">Préambule — Identification des parties</h2>
-    <table class="parties-table">
+    <table class="od-parties">
         <tr>
             <td>
-                <div class="party-label">L'Assureur</div>
-                <strong>{{ assureur|default:"SONAS Assurances" }}</strong><br>
-                Société d'assurances immobilières<br>
-                Ci-après dénommée « l'Assureur »
+                <p class="od-party-label">L'assureur</p>
+                <p class="od-party-name">{{ assureur|default:"SONAS Assurances" }}</p>
+                <p class="od-party-meta">Société d'assurances immobilières<br>Ci-après « l'Assureur »</p>
             </td>
             <td>
-                <div class="party-label">Le Souscripteur</div>
-                <strong>{{ client.display_name }}</strong><br>
-                {% if client.adresse %}{{ client.adresse }}<br>{% endif %}
-                {% if client.code_postal or client.ville %}{{ client.code_postal }} {{ client.ville }}<br>{% endif %}
-                Email : {{ client.email }}<br>
-                Ci-après dénommé « le Souscripteur »
+                <p class="od-party-label">Le souscripteur</p>
+                <p class="od-party-name">{{ client.display_name }}</p>
+                <p class="od-party-meta">
+                    {% if client.adresse %}{{ client.adresse }}<br>{% endif %}
+                    {% if client.code_postal or client.ville %}{{ client.code_postal }} {{ client.ville }}<br>{% endif %}
+                    {{ client.email }}<br>
+                    Ci-après « le Souscripteur »
+                </p>
             </td>
         </tr>
     </table>
+</section>
 
-    <h2 class="article">Article 1 — Objet du contrat</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">II</span>
+        <h2>Article 1 — Objet du contrat</h2>
+    </div>
+    <p class="od-prose">
         Le présent contrat a pour objet de garantir le Souscripteur, dans les limites et conditions ci-après,
         contre les conséquences pécuniaires des sinistres survenus au cours de la période de garantie et
         affectant le bien immobilier identifié à l'article 2, conformément aux garanties prévues aux
         Conditions Générales SONAS applicables à la formule multirisque habitation.
     </p>
+</section>
 
-    <h2 class="article">Article 2 — Description du risque assuré</h2>
-    <table class="data-table">
-        <tr>
-            <th>Référence bien</th>
-            <th>Type</th>
-            <th>Localisation</th>
-            <th>Surface</th>
-        </tr>
-        <tr>
-            <td class="highlight">{{ bien.reference }}</td>
-            <td>{{ bien.get_type_bien_display }}</td>
-            <td>{{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}</td>
-            <td>{% if bien.surface_m2 %}{{ bien.surface_m2 }} m²{% else %}—{% endif %}</td>
-        </tr>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">III</span>
+        <h2>Article 2 — Description du risque assuré</h2>
+    </div>
+    <table class="od-table">
+        <thead>
+            <tr>
+                <th>Référence</th>
+                <th>Type</th>
+                <th>Localisation</th>
+                <th>Surface</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="hl">{{ bien.reference }}</td>
+                <td>{{ bien.get_type_bien_display }}</td>
+                <td>{{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}</td>
+                <td>{% if bien.surface_m2 %}{{ bien.surface_m2 }} m²{% else %}—{% endif %}</td>
+            </tr>
+        </tbody>
     </table>
-    <p>
+    <p class="od-prose">
         Le Souscripteur déclare être titulaire des droits nécessaires sur le bien désigné et que celui-ci
         a été préalablement validé dans le système d'information SONAS.
     </p>
+</section>
 
-    <h2 class="article">Article 3 — Durée — Prise d'effet — Résiliation</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">IV</span>
+        <h2>Article 3 — Durée — Prise d'effet — Résiliation</h2>
+    </div>
+    <p class="od-prose">
         Le contrat est conclu pour une durée déterminée du
-        <span class="highlight">{{ contrat.date_debut|date:"d/m/Y" }}</span>
-        au <span class="highlight">{{ contrat.date_fin|date:"d/m/Y" }}</span> inclus.
-    </p>
-    <p>
+        <strong>{{ contrat.date_debut|date:"d/m/Y" }}</strong>
+        au <strong>{{ contrat.date_fin|date:"d/m/Y" }}</strong> inclus.
         Sauf dénonciation dans les formes prévues aux CG SONAS, le contrat expire automatiquement à la date
         de fin de période. L'Assureur se réserve le droit de ne pas renouveler le contrat ou d'en modifier
         les conditions tarifaires lors de tout renouvellement, sous réserve du respect du préavis légal.
     </p>
+</section>
 
-    <h2 class="article">Article 4 — Prime d'assurance</h2>
-    <p>
-        La prime annuelle est fixée à
-        <span class="highlight">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} euros (€){% else %}—{% endif %}</span>,
-        payable selon les modalités définies aux Conditions Générales. Toute période commencée est due en entier
-        sauf dispositions légales contraires.
-    </p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">V</span>
+        <h2>Article 4 — Prime d'assurance</h2>
+    </div>
+    <div class="od-callout">
+        <p class="od-callout-label">Prime annuelle</p>
+        <p class="od-amount" style="color: var(--accent);">
+            {% if contrat.montant_annuel %}{{ contrat.montant_annuel }} USD ($){% else %}—{% endif %}
+        </p>
+        <p>Payable selon les modalités définies aux Conditions Générales. Toute période commencée est due en entier sauf dispositions légales contraires.</p>
+    </div>
+</section>
 
-    <h2 class="article">Article 5 — Plafond d'indemnisation</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">VI</span>
+        <h2>Article 5 — Plafond d'indemnisation</h2>
+    </div>
+    <p class="od-prose">
         Le montant total des indemnités versées au titre du présent contrat ne pourra excéder, toutes garanties
-        confondues, la somme de
-        <span class="highlight">{{ contrat.plafond_indemnisation }} euros (€)</span>
+        confondues, la somme de <strong>{{ contrat.plafond_indemnisation }} USD ($)</strong>
         (ci-après « le Plafond contractuel »).
-    </p>
-    <p>
         Chaque indemnisation accordée sera imputée sur le Plafond contractuel. Lorsque le Plafond est épuisé
         ou en cas de dépassement, le contrat devient inactif et toute nouvelle déclaration de sinistre
         est impossible, conformément aux CG SONAS.
     </p>
+</section>
 
-    <h2 class="article">Article 6 — Obligations du Souscripteur</h2>
-    <p>Le Souscripteur s'engage notamment à :</p>
-    <ul class="contract-list">
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">VII</span>
+        <h2>Article 6 — Obligations du Souscripteur</h2>
+    </div>
+    <p class="od-prose">Le Souscripteur s'engage notamment à :</p>
+    <ul class="od-list">
         <li>Déclarer de bonne foi et avec exactitude toutes les informations requises à la souscription ;</li>
         <li>Informer l'Assureur sans délai de toute modification affectant le risque assuré ;</li>
         <li>Maintenir le bien en bon état d'entretien et respecter la réglementation applicable ;</li>
@@ -278,78 +148,103 @@
         <li>Payer la prime aux échéances convenues.</li>
     </ul>
     {% if contrat.notes %}
-    <p><strong>Observations particulières du Souscripteur :</strong> {{ contrat.notes }}</p>
+    <p class="od-prose"><strong>Observations particulières :</strong> {{ contrat.notes }}</p>
     {% endif %}
+</section>
 
-    <h2 class="article">Article 7 — Déclaration de sinistre</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">VIII</span>
+        <h2>Article 7 — Déclaration de sinistre</h2>
+    </div>
+    <p class="od-prose">
         Tout sinistre susceptible d'engager la garantie de l'Assureur doit être déclaré par le Souscripteur
         via l'espace client SONAS, dans un délai maximum de cinq (5) jours ouvrés à compter de sa survenance
         ou de la date à laquelle le Souscripteur en a eu connaissance. La déclaration devra être accompagnée
         des pièces justificatives nécessaires à l'instruction du dossier (photographies, devis, constats, etc.).
     </p>
+</section>
 
-    <h2 class="article">Article 8 — Indemnisation</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">IX</span>
+        <h2>Article 8 — Indemnisation</h2>
+    </div>
+    <p class="od-prose">
         Sous réserve des exclusions prévues aux CG SONAS et des plafonds contractuels, l'Assureur procèdera
         à l'indemnisation du Souscripteur selon les modalités définies après expertise et validation du sinistre
         par les autorités compétentes SONAS. Un rapport d'indemnisation sera établi et communiqué au Souscripteur.
     </p>
+</section>
 
-    <h2 class="article">Article 9 — Nullité — Fausses déclarations</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">X</span>
+        <h2>Article 9 — Nullité — Fausses déclarations</h2>
+    </div>
+    <p class="od-prose">
         Conformément aux articles L.113-8 et suivants du Code des assurances, toute réticence ou fausse déclaration
         intentionnelle de la part du Souscripteur entraîne la nullité du contrat. Les omissions ou inexactitudes
         non intentionnelles peuvent entraîner une réduction d'indemnité ou la résiliation du contrat selon la gravité
         du manquement constaté.
     </p>
+</section>
 
-    <h2 class="article">Article 10 — Protection des données</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">XI</span>
+        <h2>Article 10 — Protection des données</h2>
+    </div>
+    <p class="od-prose">
         Les données personnelles collectées dans le cadre du présent contrat sont traitées par SONAS Assurances
         conformément au Règlement (UE) 2016/679 (RGPD) et à la loi Informatique et Libertés, aux fins de gestion
         contractuelle, de lutte contre la fraude et d'exercice des recours. Le Souscripteur dispose d'un droit
         d'accès, de rectification et d'opposition auprès du délégué à la protection des données SONAS.
     </p>
+</section>
 
-    <h2 class="article">Article 11 — Litiges — Droit applicable</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">XII</span>
+        <h2>Article 11 — Litiges — Droit applicable</h2>
+    </div>
+    <p class="od-prose">
         Le présent contrat est soumis au droit français. En cas de litige relatif à l'interprétation ou à l'exécution
         des présentes, les parties s'efforceront de trouver une solution amiable. À défaut, compétence expresse
         est attribuée aux tribunaux du ressort du siège social de l'Assureur, sous réserve des règles d'ordre public.
     </p>
+</section>
 
-    <h2 class="article">Article 12 — Acceptation électronique</h2>
-    <p>
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">XIII</span>
+        <h2>Article 12 — Acceptation électronique</h2>
+    </div>
+    <p class="od-prose">
         Le Souscripteur reconnaît avoir lu et accepté l'intégralité des présentes conditions particulières ainsi
         que les CG SONAS. La signature électronique apposée le
-        <span class="highlight">{{ signature_date|date:"d/m/Y à H:i" }}</span>
+        <strong>{{ signature_date|date:"d/m/Y à H:i" }}</strong>
         vaut acceptation définitive des termes du contrat et emporte les mêmes effets qu'une signature manuscrite,
         conformément à l'article 1367 du Code civil.
     </p>
+</section>
 
-    <div class="signatures">
-        <table>
-            <tr>
-                <td>
-                    <div class="sig-label">Pour l'Assureur</div>
-                    <strong>SONAS Assurances</strong><br>
-                    Représentant habilité
-                    <div class="sig-line">Cachet et signature</div>
-                </td>
-                <td style="padding-left:12pt;">
-                    <div class="sig-label">Le Souscripteur</div>
-                    <strong>{{ client.display_name }}</strong><br>
-                    {{ client.email }}
-                    <div class="sig-line">Signé électroniquement le {{ signature_date|date:"d/m/Y" }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
+<table class="od-signs">
+    <tr>
+        <td>
+            <p class="od-sign-label">Pour l'assureur</p>
+            <p class="od-sign-name">{{ assureur|default:"SONAS Assurances" }}</p>
+            <p class="od-sign-meta">Représentant habilité</p>
+            <div class="od-sign-line">Cachet et signature</div>
+        </td>
+        <td>
+            <p class="od-sign-label">Le souscripteur</p>
+            <p class="od-sign-name">{{ client.display_name }}</p>
+            <p class="od-sign-meta">{{ client.email }}</p>
+            <div class="od-sign-line">Signé électroniquement le {{ signature_date|date:"d/m/Y" }}</div>
+        </td>
+    </tr>
+</table>
 
-    <div id="footerContent">
-        Document contractuel SONAS — {{ contrat.reference }} — Généré le {{ signature_date|date:"d/m/Y H:i" }} — Page <pdf:pagenumber> / <pdf:pagecount>
-    </div>
-
-</body>
-</html>
+{% include 'documents/partials/od_footer.html' with doc_ref=contrat.reference doc_service="Conditions particulières" %}
+{% endblock %}

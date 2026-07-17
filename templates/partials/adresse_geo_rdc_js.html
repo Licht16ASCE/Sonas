@@ -1,0 +1,197 @@
+{# Autocomplete + vérification carte OpenStreetMap (RDC), ville d'abord. #}
+<script>
+(function () {
+  var searchUrl = "{% url 'core:geo_adresse_search' %}";
+  var verifyUrl = "{% url 'core:geo_adresse_verify' %}";
+  var villeEl = document.getElementById('id_ville');
+  var adresseEl = document.getElementById('id_adresse');
+  var codePostalEl = document.getElementById('id_code_postal');
+  if (!villeEl || !adresseEl) return;
+
+  var wrap = adresseEl.closest('div') || adresseEl.parentElement;
+  wrap.style.position = 'relative';
+
+  var hint = document.createElement('p');
+  hint.id = 'sonas-geo-hint';
+  hint.className = 'text-xs text-slate-500 mt-1';
+  if (!document.getElementById('sonas-geo-hint')) {
+    adresseEl.insertAdjacentElement('afterend', hint);
+  } else {
+    hint = document.getElementById('sonas-geo-hint');
+  }
+
+  var status = document.getElementById('sonas-geo-status');
+  if (!status) {
+    status = document.createElement('p');
+    status.id = 'sonas-geo-status';
+    status.className = 'text-xs mt-1';
+    status.setAttribute('aria-live', 'polite');
+    hint.insertAdjacentElement('afterend', status);
+  }
+
+  var list = document.getElementById('sonas-geo-suggestions');
+  if (!list) {
+    list = document.createElement('ul');
+    list.id = 'sonas-geo-suggestions';
+    list.className = 'hidden absolute z-30 left-0 right-0 mt-1 max-h-56 overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:bg-slate-900 dark:border-slate-700';
+    wrap.appendChild(list);
+  }
+
+  var mapsLink = document.getElementById('sonas-geo-maps');
+  if (!mapsLink) {
+    mapsLink = document.createElement('a');
+    mapsLink.id = 'sonas-geo-maps';
+    mapsLink.className = 'hidden text-xs text-indigo-600 hover:underline mt-1 inline-block';
+    mapsLink.target = '_blank';
+    mapsLink.rel = 'noopener noreferrer';
+    mapsLink.textContent = 'Voir sur OpenStreetMap';
+    status.insertAdjacentElement('afterend', mapsLink);
+  }
+
+  var timer = null;
+
+  function setStatus(text, ok) {
+    status.textContent = text || '';
+    status.className = 'text-xs mt-1 ' + (ok === true ? 'text-emerald-600' : ok === false ? 'text-red-600' : 'text-slate-500');
+  }
+
+  function setMaps(url) {
+    if (url) {
+      mapsLink.href = url;
+      mapsLink.classList.remove('hidden');
+    } else {
+      mapsLink.classList.add('hidden');
+    }
+  }
+
+  function syncAdresseEnabled() {
+    var hasVille = !!(villeEl.value || '').trim();
+    adresseEl.disabled = !hasVille;
+    if (!hasVille) {
+      adresseEl.value = '';
+      list.classList.add('hidden');
+      list.innerHTML = '';
+      setStatus('Choisissez une ville pour activer la recherche d\'adresse.', null);
+      setMaps('');
+      hint.textContent = 'Sélectionnez d\'abord une ville, puis saisissez une adresse réelle (suggestions OpenStreetMap).';
+    } else {
+      hint.textContent = 'Recherche cartographique limitée à « ' + villeEl.value + ' » (RDC). Tapez au moins 3 caractères.';
+      setStatus('', null);
+    }
+  }
+
+  function hideList() {
+    list.classList.add('hidden');
+  }
+
+  function showSuggestions(items) {
+    list.innerHTML = '';
+    if (!items || !items.length) {
+      hideList();
+      return;
+    }
+    items.forEach(function (item) {
+      var li = document.createElement('li');
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 dark:hover:bg-slate-800 border-b border-slate-100 dark:border-slate-800 last:border-0';
+      btn.textContent = item.label || item.adresse;
+      btn.addEventListener('click', function () {
+        adresseEl.value = item.adresse || item.label || '';
+        if (codePostalEl && item.postcode) {
+          codePostalEl.value = item.postcode;
+        }
+        setStatus('Adresse localisée sur la carte (RDC).', true);
+        setMaps(item.maps_url || '');
+        hideList();
+      });
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    list.classList.remove('hidden');
+  }
+
+  function fetchSuggestions() {
+    var ville = (villeEl.value || '').trim();
+    var q = (adresseEl.value || '').trim();
+    if (!ville || q.length < 3) {
+      hideList();
+      return;
+    }
+    setStatus('Recherche sur la carte…', null);
+    var url = searchUrl + '?ville=' + encodeURIComponent(ville) + '&q=' + encodeURIComponent(q);
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.error && !(data.results && data.results.length)) {
+          setStatus(data.error, false);
+          hideList();
+          return;
+        }
+        var results = data.results || [];
+        showSuggestions(results);
+        if (results.length) {
+          setStatus(results.length + ' suggestion(s) pour ' + ville + '.', null);
+        } else {
+          setStatus('Aucune suggestion — affinez le nom de rue pour « ' + ville + ' ».', false);
+        }
+      })
+      .catch(function () {
+        setStatus('Impossible de contacter le service cartographique.', false);
+        hideList();
+      });
+  }
+
+  function verifyNow() {
+    var ville = (villeEl.value || '').trim();
+    var adresse = (adresseEl.value || '').trim();
+    if (!ville || !adresse || adresse.length < 3) return;
+    var url = verifyUrl + '?ville=' + encodeURIComponent(ville) + '&adresse=' + encodeURIComponent(adresse);
+    fetch(url, { headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          setStatus('Adresse vérifiable sur OpenStreetMap (RDC).', true);
+          if (data.result && data.result.maps_url) setMaps(data.result.maps_url);
+        } else {
+          setStatus(data.error || 'Adresse non trouvée pour cette ville.', false);
+          setMaps('');
+        }
+      })
+      .catch(function () { /* silencieux */ });
+  }
+
+  villeEl.addEventListener('change', function () {
+    adresseEl.value = '';
+    syncAdresseEnabled();
+    hideList();
+  });
+
+  adresseEl.addEventListener('input', function () {
+    clearTimeout(timer);
+    setMaps('');
+    timer = setTimeout(fetchSuggestions, 450);
+  });
+
+  adresseEl.addEventListener('blur', function () {
+    setTimeout(function () {
+      hideList();
+      verifyNow();
+    }, 200);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!wrap.contains(e.target)) hideList();
+  });
+
+  // Avant submit : réactiver le champ désactivé pour qu'il soit envoyé
+  var form = adresseEl.form;
+  if (form) {
+    form.addEventListener('submit', function () {
+      adresseEl.disabled = false;
+    });
+  }
+
+  syncAdresseEnabled();
+})();
+</script>

@@ -1,0 +1,78 @@
+{% extends 'documents/pdf_base.html' %}
+{% block document_body %}
+{% include 'documents/partials/od_letterhead.html' with doc_kind="Bon de paiement" doc_ref=contrat.bon_paiement_reference doc_date=generated_at|date:"d/m/Y à H:i" %}
+
+<div class="od-doc-title">
+    <p class="od-doc-kicker">Souscription · Prime annuelle</p>
+    <h1>Bon de paiement</h1>
+    <span class="od-ref">{{ contrat.bon_paiement_reference }}</span>
+</div>
+
+<p class="od-meta-line">
+    À présenter en banque · Paiement de la prime d'assurance ·
+    Contrat <strong>{{ contrat.reference }}</strong>
+</p>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">01</span>
+        <h2>Identité du payeur</h2>
+    </div>
+    <table class="od-table">
+        <tr><th>Client</th><td class="hl">{{ client.display_name }}</td></tr>
+        <tr><th>Email</th><td>{{ client.user.email }}</td></tr>
+        <tr><th>Téléphone</th><td>{{ client.user.phone|default:"—" }}</td></tr>
+        <tr><th>Adresse</th><td>{{ client.adresse|default:"—" }}{% if client.ville %}, {{ client.code_postal }} {{ client.ville }}{% endif %}</td></tr>
+    </table>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">02</span>
+        <h2>Objet du paiement</h2>
+    </div>
+    <table class="od-table">
+        <tr><th>Bien assuré</th><td class="hl">{{ bien.reference }} — {{ bien.get_type_bien_display }}</td></tr>
+        <tr><th>Adresse du bien</th><td>{{ bien.adresse }}, {{ bien.code_postal }} {{ bien.ville }}</td></tr>
+        <tr><th>Contrat</th><td>{{ contrat.reference }}</td></tr>
+        {% if police %}
+        <tr><th>Police</th><td>{{ police.reference }} — {{ police.type_assurance }}</td></tr>
+        {% endif %}
+        <tr><th>Période de garantie</th><td>{{ contrat.date_debut|date:"d/m/Y" }} → {{ contrat.date_fin|date:"d/m/Y" }}</td></tr>
+        <tr><th>Plafond d'indemnisation</th><td>{{ currency_symbol }}{{ contrat.plafond_indemnisation }}</td></tr>
+    </table>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">03</span>
+        <h2>Montant à régler</h2>
+    </div>
+    <div class="od-callout ok">
+        <p class="od-callout-label">Prime annuelle (USD)</p>
+        <p class="od-amount">{{ currency_symbol }}{% if contrat.montant_annuel %}{{ contrat.montant_annuel }}{% else %}0.00{% endif %}</p>
+        <p>Référence de virement à indiquer obligatoirement :
+            <strong>{{ contrat.bon_paiement_reference }}</strong></p>
+    </div>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">04</span>
+        <h2>Mode opératoire</h2>
+    </div>
+    <ol class="od-steps">
+        <li>Imprimez ce bon de paiement (ou conservez le PDF).</li>
+        <li>Effectuez le paiement auprès de votre banque en indiquant la référence ci-dessus.</li>
+        <li>Déposez la preuve (reçu / bordereau) dans votre espace client SONAS.</li>
+        <li>Un agent SONAS valide le paiement avant activation du contrat.</li>
+    </ol>
+</section>
+
+<p class="od-legal">
+    Document officiel émis par {{ assureur }}. Ce bon ne constitue pas une preuve de paiement
+    tant que la validation agent n'est pas enregistrée dans le système SONAS.
+</p>
+
+{% include 'documents/partials/od_footer.html' with doc_ref=contrat.bon_paiement_reference doc_service="Service souscription" %}
+{% endblock %}

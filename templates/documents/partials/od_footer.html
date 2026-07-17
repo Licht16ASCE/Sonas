@@ -1,0 +1,7 @@
+<footer class="od-footer">
+    {{ assureur|default:"SONAS Assurances" }}
+    {% if doc_ref %} · {{ doc_ref }}{% endif %}
+    {% if doc_service %} · {{ doc_service }}{% endif %}
+    <br>
+    Document généré automatiquement — toute falsification est passible de poursuites.
+</footer>

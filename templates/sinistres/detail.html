@@ -42,10 +42,30 @@
     </p>
     <p class="text-sm text-emerald-700/80 dark:text-emerald-300/70 mt-1">
         Décision enregistrée le {% if sinistre.date_validation %}{{ sinistre.date_validation|date:"d/m/Y" }}{% else %}—{% endif %}.
-        {% if sinistre.montant_indemnise %} Montant indemnisé : <strong>{{ sinistre.montant_indemnise }} €</strong>.
+        {% if sinistre.montant_indemnise %} Montant indemnisé : <strong>{{ sinistre.montant_indemnise }} $</strong>.
         {% elif not sinistre.indemnisation_accordee %} Aucune indemnisation n'a été accordée.{% endif %}
     </p>
 </div>
+{% if sinistre.indemnisation_accordee and sinistre.montant_indemnise %}
+<div class="mb-6 sonas-card p-4 border-l-4 {% if sinistre.statut_retrait_paiement == 'VERT' %}border-l-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/15{% else %}border-l-red-500 bg-red-50/40 dark:bg-red-950/15{% endif %}">
+    <p class="font-semibold {% if sinistre.statut_retrait_paiement == 'VERT' %}text-emerald-800 dark:text-emerald-200{% else %}text-red-800 dark:text-red-200{% endif %}">
+        État paiement indemnisation :
+        {% if sinistre.statut_retrait_paiement == 'VERT' %}VERT — indemnisé, preuve fournie{% else %}ROUGE — preuve de retrait manquante{% endif %}
+    </p>
+    {% if sinistre.document_retrait_bancaire %}
+    <p class="text-sm mt-2">
+        <a href="{% if user.is_client %}{% url 'documents_client:preview' sinistre.document_retrait_bancaire.pk %}{% else %}{% url 'documents:preview' sinistre.document_retrait_bancaire.pk %}{% endif %}" class="text-indigo-600 hover:underline">Aperçu du document de retrait bancaire</a>
+    </p>
+    {% endif %}
+    {% if sinistre.statut_retrait_paiement != 'VERT' %}
+    <form method="post" action="{% url 'sinistres_client:upload_preuve_retrait' sinistre.pk %}" enctype="multipart/form-data" class="mt-3 space-y-2">
+        {% csrf_token %}
+        <input type="file" name="preuve_retrait" required class="sonas-input">
+        <button type="submit" class="sonas-btn sonas-btn-primary sonas-btn-sm">Déposer la preuve de retrait</button>
+    </form>
+    {% endif %}
+</div>
+{% endif %}
 {% endif %}
 
 <div class="grid lg:grid-cols-2 gap-6">
@@ -56,13 +76,13 @@
             <div class="flex justify-between gap-4"><dt class="text-slate-500">Déclaré le</dt><dd class="font-medium">{{ sinistre.created_at|date:"d/m/Y" }}</dd></div>
             <div class="flex justify-between gap-4"><dt class="text-slate-500">Bien concerné</dt><dd class="font-medium"><a href="{% url 'biens_client:detail' sinistre.contrat.bien.pk %}" class="text-indigo-600 hover:underline">{{ sinistre.contrat.bien.reference }}</a></dd></div>
             {% if sinistre.montant_estime %}
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant estimé</dt><dd class="font-medium">{{ sinistre.montant_estime }} €</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant estimé</dt><dd class="font-medium">{{ sinistre.montant_estime }} $</dd></div>
             {% endif %}
             {% if sinistre.plafond_indemnisation %}
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{{ sinistre.plafond_indemnisation }} €</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{{ sinistre.plafond_indemnisation }} $</dd></div>
             {% endif %}
             {% if sinistre.montant_indemnise is not None %}
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ sinistre.montant_indemnise }} €</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ sinistre.montant_indemnise }} $</dd></div>
             {% endif %}
             <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
                 <dt class="text-slate-500 mb-1">Description</dt>
@@ -94,12 +114,12 @@
 <div class="mt-6 sonas-card p-6 border-l-4 border-l-emerald-500">
     <h2 class="font-bold mb-4">Votre rapport d'indemnisation</h2>
     <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
-        Un montant de <strong class="text-emerald-600">{{ rapport.montant_indemnise }} €</strong> a été enregistré.
-        {% if rapport.montant_non_couvert %} {{ rapport.montant_non_couvert }} € n'ont pas pu être couverts par le contrat.{% endif %}
+        Un montant de <strong class="text-emerald-600">{{ rapport.montant_indemnise }} $</strong> a été enregistré.
+        {% if rapport.montant_non_couvert %} {{ rapport.montant_non_couvert }} $ n'ont pas pu être couverts par le contrat.{% endif %}
     </p>
     <div class="flex flex-wrap gap-2">
-        <a href="{% url 'sinistres_client:rapport' rapport.pk %}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Consulter le rapport</a>
-        {% if rapport.document %}<a href="{{ rapport.document.fichier.url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm" target="_blank" download>Télécharger ma copie</a>{% endif %}
+        <a href="{% url 'sinistres_client:rapport' rapport.pk %}" class="sonas-btn sonas-btn-primary sonas-btn-sm">Aperçu du rapport</a>
+        {% if rapport.document %}<a href="{% url 'documents_client:preview' rapport.document.pk %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Document officiel</a>{% endif %}
     </div>
 </div>
 {% endif %}

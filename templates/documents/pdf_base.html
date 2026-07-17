@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr"{% if not pdf_mode %} x-data="sonasDocTheme()" :class="{ 'dark': isDark }" x-init="init()"{% endif %}>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ preview_title }} — SONAS</title>
+    {% if not pdf_mode %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {% endif %}
+    {# Même CSS injecté en aperçu et en PDF → rendu identique #}
+    <style>{{ document_css|safe }}</style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="sonas-doc {% if pdf_mode %}sonas-doc-pdf{% else %}sonas-doc-screen{% endif %}">
+    {% if not pdf_mode %}
+    <div class="sonas-doc-preview-bar">
+        <div class="meta">
+            <strong>{{ preview_title }}</strong>
+            <span>Feuille A4 · Identique au PDF · Cohérent avec le thème SONAS</span>
+        </div>
+        <div class="sonas-doc-preview-actions">
+            <span class="sonas-doc-theme-hint" x-text="isDark ? 'Thème sombre' : 'Thème clair'"></span>
+            {% if back_url %}
+            <a class="sonas-doc-btn sonas-doc-btn-secondary" href="{{ back_url }}">Retour</a>
+            {% endif %}
+            {% if download_url %}
+            <a class="sonas-doc-btn sonas-doc-btn-primary" href="{{ download_url }}">Télécharger le PDF</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    <div class="sonas-doc-stage">
+        <div class="sonas-doc-page">
+            <article class="od-sheet">
+                {% block document_body %}{% endblock %}
+            </article>
+            {% if not pdf_mode %}
+            <p class="od-paper-caption">Document officiel format A4 — présentation papier</p>
+            {% endif %}
+        </div>
+    </div>
+    {% if not pdf_mode %}
+    <script>
+        function sonasDocTheme() {
+            return {
+                isDark: false,
+                preference: localStorage.getItem('sonas-theme') || '{{ theme_preference|default:"system" }}',
+                init() {
+                    this.apply(this.preference);
+                    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+                    const onChange = () => {
+                        if ((this.preference || 'system') === 'system') {
+                            this.isDark = mq.matches;
+                        }
+                    };
+                    if (mq.addEventListener) mq.addEventListener('change', onChange);
+                    else if (mq.addListener) mq.addListener(onChange);
+                },
+                apply(pref) {
+                    this.preference = pref || 'system';
+                    if (pref === 'dark') this.isDark = true;
+                    else if (pref === 'light') this.isDark = false;
+                    else this.isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                }
+            };
+        }
+    </script>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,81 @@
+{% extends 'documents/pdf_base.html' %}
+{% block document_body %}
+{% include 'documents/partials/od_letterhead.html' with doc_kind="Retrait bancaire" doc_ref=reference doc_date=generated_at|date:"d/m/Y à H:i" %}
+
+<div class="od-doc-title">
+    <p class="od-doc-kicker">Indemnisation · Autorisation de retrait</p>
+    <h1>Document de retrait bancaire</h1>
+    <span class="od-ref">{{ reference }}</span>
+</div>
+
+<p class="od-meta-line">
+    Sinistre <strong>{{ sinistre.reference }}</strong> ·
+    Contrat <strong>{{ contrat.reference }}</strong>
+</p>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">01</span>
+        <h2>Bénéficiaire</h2>
+    </div>
+    <table class="od-table">
+        <tr><th>Nom</th><td class="hl">{{ client.display_name }}</td></tr>
+        <tr><th>Email</th><td>{{ client.user.email }}</td></tr>
+        <tr><th>Téléphone</th><td>{{ client.user.phone|default:"—" }}</td></tr>
+    </table>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">02</span>
+        <h2>Dossier d'indemnisation</h2>
+    </div>
+    <table class="od-table">
+        <tr><th>Sinistre</th><td class="hl">{{ sinistre.reference }} — {{ sinistre.get_type_sinistre_display }}</td></tr>
+        <tr><th>Contrat</th><td>{{ contrat.reference }}</td></tr>
+        <tr><th>Bien</th><td>{{ sinistre.bien.reference }} — {{ sinistre.bien.ville }}</td></tr>
+        <tr><th>Date du sinistre</th><td>{{ sinistre.date_sinistre|date:"d/m/Y" }}</td></tr>
+    </table>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">03</span>
+        <h2>Montant autorisé</h2>
+    </div>
+    <div class="od-callout ok">
+        <p class="od-callout-label">Montant autorisé au retrait (USD)</p>
+        <p class="od-amount">{{ currency_symbol }}{{ montant }}</p>
+        <p>Ce document constitue l'autorisation officielle de retrait auprès de l'établissement bancaire partenaire.</p>
+    </div>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">04</span>
+        <h2>Visa assureur</h2>
+    </div>
+    <table class="od-signs">
+        <tr>
+            <td>
+                <p class="od-sign-label">Pour l'assureur</p>
+                <p class="od-sign-name">{{ assureur }}</p>
+                <p class="od-sign-meta">Service indemnisation</p>
+                <div class="od-sign-line">Signature / cachet</div>
+            </td>
+            <td>
+                <p class="od-sign-label">Bénéficiaire</p>
+                <p class="od-sign-name">{{ client.display_name }}</p>
+                <p class="od-sign-meta">Accusé de réception du document</p>
+                <div class="od-sign-line">Signature</div>
+            </td>
+        </tr>
+    </table>
+</section>
+
+<p class="od-legal">
+    Après retrait, déposez la preuve dans votre espace client pour faire passer l'état d'indemnisation au vert.
+</p>
+
+{% include 'documents/partials/od_footer.html' with doc_ref=reference doc_service="Service indemnisation" %}
+{% endblock %}

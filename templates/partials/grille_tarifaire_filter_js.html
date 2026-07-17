@@ -1,0 +1,41 @@
+<script>
+(function () {
+    const typeSelect = document.getElementById('id_type_bien');
+    const grilleSelect = document.getElementById('id_grille_tarifaire');
+    if (!typeSelect || !grilleSelect) return;
+
+    const grillesByType = {{ form.grilles_by_type_json|safe }};
+    const emptyLabel = 'Automatique selon type / valeur';
+
+    function rebuildForfaits() {
+        const typeBien = typeSelect.value;
+        const previous = grilleSelect.value;
+        const options = grillesByType[typeBien] || [];
+
+        grilleSelect.innerHTML = '';
+        const empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = emptyLabel;
+        grilleSelect.appendChild(empty);
+
+        let keep = false;
+        options.forEach(function (item) {
+            const opt = document.createElement('option');
+            opt.value = String(item.id);
+            opt.textContent = item.label;
+            if (String(item.id) === previous) {
+                opt.selected = true;
+                keep = true;
+            }
+            grilleSelect.appendChild(opt);
+        });
+
+        if (!keep) {
+            grilleSelect.value = '';
+        }
+    }
+
+    typeSelect.addEventListener('change', rebuildForfaits);
+    rebuildForfaits();
+})();
+</script>

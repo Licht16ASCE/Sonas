@@ -27,10 +27,13 @@
         <dl class="space-y-3 text-sm">
             <div class="flex justify-between gap-4"><dt class="text-slate-500">Bien</dt><dd class="font-medium"><a href="{% url 'biens:detail' contrat.bien.pk %}" class="text-indigo-600 hover:underline">{{ contrat.bien.reference }}</a></dd></div>
             <div class="flex justify-between gap-4"><dt class="text-slate-500">Période</dt><dd class="font-medium">{{ contrat.date_debut|date:"d/m/Y" }} → {{ contrat.date_fin|date:"d/m/Y" }}</dd></div>
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant annuel</dt><dd class="font-medium">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} €{% else %}—{% endif %}</dd></div>
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond indemnisation</dt><dd class="font-medium">{% if contrat.plafond_indemnisation %}{{ contrat.plafond_indemnisation }} €{% else %}—{% endif %}</dd></div>
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Déjà indemnisé</dt><dd class="font-medium">{{ contrat.montant_indemnise_cumule }} €</dd></div>
-            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond disponible</dt><dd class="font-semibold {% if contrat.plafond_disponible <= 0 %}text-red-600{% else %}text-emerald-600{% endif %}">{{ contrat.plafond_disponible }} €</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant annuel</dt><dd class="font-medium">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} ${% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond indemnisation</dt><dd class="font-medium">{% if contrat.plafond_indemnisation %}{{ contrat.plafond_indemnisation }} ${% else %}—{% endif %}</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Déjà indemnisé</dt><dd class="font-medium">{{ contrat.montant_indemnise_cumule }} $</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond disponible</dt><dd class="font-semibold {% if contrat.plafond_disponible <= 0 %}text-red-600{% else %}text-emerald-600{% endif %}">{{ contrat.plafond_disponible }} $</dd></div>
+            <div class="flex justify-between gap-4"><dt class="text-slate-500">Paiement</dt><dd class="font-medium">{% if contrat.paiement_valide %}<span class="text-emerald-600">Validé</span>{% else %}<span class="text-amber-600">Non validé</span>{% endif %}</dd></div>
+            {% if police %}<div class="flex justify-between gap-4"><dt class="text-slate-500">Police</dt><dd class="font-medium">{{ police.reference }}</dd></div>{% endif %}
+            {% if contrat.bon_paiement_reference %}<div class="flex justify-between gap-4"><dt class="text-slate-500">Bon de paiement</dt><dd class="font-medium">{{ contrat.bon_paiement_reference }}</dd></div>{% endif %}
             {% if contrat.notes %}
             <div class="pt-2 border-t border-slate-200 dark:border-slate-700">
                 <dt class="text-slate-500 mb-1">Notes</dt>
@@ -38,14 +41,20 @@
             </div>
             {% endif %}
         </dl>
-        {% if contrat.statut == 'BROUILLON' %}
+        {% if contrat.statut == 'BROUILLON' or contrat.statut == 'EN_ATTENTE' %}
         <form method="post" action="{% url 'contrats:activate' contrat.pk %}" class="mt-5">
             {% csrf_token %}
-            <button type="submit" class="sonas-btn sonas-btn-primary sonas-btn-sm">Activer le contrat</button>
+            <button type="submit" class="sonas-btn sonas-btn-primary sonas-btn-sm" {% if not peut_activer %}title="Documents + paiement + bien validé requis"{% endif %}>Activer le contrat</button>
         </form>
+        {% if not peut_activer %}
+        <p class="text-xs text-slate-500 mt-2">Activation possible lorsque : bien validé, documents déposés, paiement validé.</p>
+        {% endif %}
         {% endif %}
         {% if document_contrat %}
-        <a href="{{ document_contrat.fichier.url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-3" target="_blank" download>Contrat PDF signé</a>
+        <a href="{% url 'documents:preview' document_contrat.pk %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-3">Aperçu contrat PDF</a>
+        {% endif %}
+        {% if document_bon_paiement %}
+        <a href="{% url 'documents:preview' document_bon_paiement.pk %}" class="sonas-btn sonas-btn-secondary sonas-btn-sm mt-3">Aperçu bon de paiement</a>
         {% endif %}
     </div>
 
@@ -68,4 +77,29 @@
         {% endif %}
     </div>
 </div>
+
+{% if preuves %}
+<div class="mt-6 sonas-card p-6">
+    <h2 class="font-bold mb-4">Preuves de paiement</h2>
+    <ul class="divide-y divide-slate-100 dark:divide-slate-700">
+        {% for p in preuves %}
+        <li class="py-3 flex flex-wrap items-center justify-between gap-3 text-sm">
+            <div>
+                <p class="font-medium">{{ p.reference }}</p>
+                <p class="text-slate-500">{{ p.created_at|date:"d/m/Y H:i" }}{% if p.document %} — <a href="{{ p.document.fichier.url }}" class="text-indigo-600 hover:underline" target="_blank">Voir fichier</a>{% endif %}</p>
+            </div>
+            {% if p.is_validated %}
+            <span class="sonas-badge sonas-badge-green">Validée</span>
+            {% else %}
+            <form method="post" action="{% url 'contrats:validate_paiement' contrat.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="preuve_id" value="{{ p.pk }}">
+                <button type="submit" class="sonas-btn sonas-btn-primary sonas-btn-sm">Valider le paiement</button>
+            </form>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
 {% endblock %}

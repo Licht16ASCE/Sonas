@@ -27,7 +27,7 @@
                     <p class="text-sm text-slate-600 dark:text-slate-400 mt-0.5">Votre version contractuelle est archivée dans votre dossier.</p>
                 </div>
                 {% if document_contrat %}
-                <a href="{{ document_contrat.fichier.url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm shrink-0 w-full sm:w-auto justify-center" target="_blank" download>Télécharger le PDF</a>
+                <a href="{% url 'documents_client:preview' document_contrat.pk %}" class="sonas-btn sonas-btn-primary sonas-btn-sm shrink-0 w-full sm:w-auto justify-center">Aperçu / télécharger le PDF</a>
                 {% endif %}
             </div>
         </div>

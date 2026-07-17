@@ -47,7 +47,7 @@
     {% for doc in documents %}
     <div class="sonas-card p-4">
         <div class="flex justify-between items-start gap-3 mb-2">
-            <a href="{{ doc.fichier.url }}" class="font-semibold text-indigo-600 hover:underline" target="_blank" rel="noopener">{{ doc.titre }}</a>
+            <a href="{% if user.is_client %}{% url 'documents_client:preview' doc.pk %}{% else %}{% url 'documents:preview' doc.pk %}{% endif %}" class="font-semibold text-indigo-600 hover:underline">{{ doc.titre }}</a>
             <span class="text-xs text-slate-400 shrink-0">{{ doc.created_at|date:"d/m/Y" }}</span>
         </div>
         <p class="text-sm text-slate-500 mb-2">{{ doc.get_type_document_display }}</p>
@@ -84,7 +84,7 @@
         <tbody>
             {% for doc in documents %}
             <tr>
-                <td><a href="{{ doc.fichier.url }}" class="text-indigo-600 hover:underline font-medium" target="_blank" rel="noopener">{{ doc.titre }}</a></td>
+                <td><a href="{% if user.is_client %}{% url 'documents_client:preview' doc.pk %}{% else %}{% url 'documents:preview' doc.pk %}{% endif %}" class="text-indigo-600 hover:underline font-medium">{{ doc.titre }}</a></td>
                 <td>{{ doc.get_type_document_display }}</td>
                 {% if is_internal_list %}
                 <td class="text-slate-600">{% if doc.client %}{{ doc.client.display_name }}{% else %}—{% endif %}</td>

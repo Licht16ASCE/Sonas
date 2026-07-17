@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}{{ document.titre }}{% endblock %}
+{% block content %}
+<div class="sonas-create-page">
+    <div class="sonas-page-header flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+            <h1>{{ document.titre }}</h1>
+            <p>{{ document.get_type_document_display }} · Aperçu du fichier</p>
+        </div>
+        <div class="flex flex-wrap gap-2 shrink-0">
+            {% if back_url %}
+            <a href="{{ back_url }}" class="sonas-btn sonas-btn-secondary sonas-btn-sm">Retour</a>
+            {% endif %}
+            <a href="{{ download_url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm" download>Télécharger</a>
+        </div>
+    </div>
+    <div class="sonas-create-body">
+        <div class="sonas-card p-4 sm:p-6 overflow-hidden">
+            {% if is_pdf %}
+            <iframe src="{{ document.fichier.url }}" class="w-full rounded-xl border border-slate-200 bg-white" style="min-height:75vh" title="Aperçu PDF"></iframe>
+            {% elif is_image %}
+            <img src="{{ document.fichier.url }}" alt="{{ document.titre }}" class="max-w-full mx-auto rounded-xl">
+            {% else %}
+            <p class="text-slate-600 text-sm mb-4">Aperçu non disponible pour ce format. Utilisez le téléchargement.</p>
+            <a href="{{ download_url }}" class="sonas-btn sonas-btn-primary" download>Télécharger le fichier</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

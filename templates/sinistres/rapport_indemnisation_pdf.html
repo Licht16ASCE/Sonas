@@ -1,0 +1,114 @@
+{% extends 'documents/pdf_base.html' %}
+{% block document_body %}
+{% include 'documents/partials/od_letterhead.html' with doc_kind="Rapport d'indemnisation" doc_ref=rapport.reference doc_date=generated_at|date:"d/m/Y à H:i" %}
+
+<div class="od-doc-title">
+    <p class="od-doc-kicker">Service indemnisation · Décision financière</p>
+    <h1>Rapport d'indemnisation</h1>
+    <span class="od-ref">{{ rapport.reference }}</span>
+</div>
+
+<p class="od-meta-line">
+    Sinistre <strong>{{ sinistre.reference }}</strong>
+    · Contrat <strong>{{ contrat.reference }}</strong>
+    · Devise <strong>USD ($)</strong>
+</p>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">01</span>
+        <h2>Identification du dossier</h2>
+    </div>
+    <table class="od-table">
+        <tr><th>Client</th><td class="hl">{{ client.display_name }}</td></tr>
+        <tr><th>Email</th><td>{{ client.user.email }}</td></tr>
+        <tr><th>Sinistre</th><td class="hl">{{ sinistre.reference }} — {{ sinistre.get_type_sinistre_display }}</td></tr>
+        <tr><th>Date du sinistre</th><td>{{ sinistre.date_sinistre|date:"d/m/Y" }}</td></tr>
+        <tr><th>Contrat</th><td>{{ contrat.reference }}</td></tr>
+        <tr><th>Bien assuré</th><td>{{ sinistre.bien.reference }} — {{ sinistre.bien.ville }}</td></tr>
+        <tr><th>Adresse du bien</th><td>{{ sinistre.bien.adresse }}, {{ sinistre.bien.code_postal }} {{ sinistre.bien.ville }}</td></tr>
+    </table>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">02</span>
+        <h2>Synthèse financière</h2>
+    </div>
+    <div class="od-callout ok">
+        <p class="od-callout-label">Montant indemnisé (USD)</p>
+        <p class="od-amount">{{ currency_symbol }}{{ rapport.montant_indemnise }}</p>
+        <p>Montant demandé : <strong>{{ currency_symbol }}{{ rapport.montant_demande }}</strong>
+           {% if rapport.montant_non_couvert %}
+           · Non couvert : <strong>{{ currency_symbol }}{{ rapport.montant_non_couvert }}</strong>
+           {% endif %}
+        </p>
+    </div>
+    <table class="od-table">
+        <tr><th>Plafond sinistre</th><td>{{ currency_symbol }}{{ rapport.plafond_sinistre }}</td></tr>
+        <tr><th>Plafond contrat (avant)</th><td>{{ currency_symbol }}{{ rapport.plafond_contrat_avant }}</td></tr>
+        <tr><th>Plafond contrat (après)</th><td class="hl">{{ currency_symbol }}{{ rapport.plafond_contrat_apres }}</td></tr>
+    </table>
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">03</span>
+        <h2>Décision contractuelle</h2>
+    </div>
+    {% if rapport.depassement_detecte %}
+    <div class="od-note">
+        <strong>Dépassement de plafond détecté.</strong>
+        Une partie du montant demandé n'a pas pu être couverte par le contrat.
+        {% if rapport.contrat_invalide %}
+        Le contrat {{ contrat.reference }} est devenu <strong>inactif</strong>
+        (plafond dépassé ou épuisé). Les nouvelles déclarations de sinistre ne sont plus possibles.
+        {% endif %}
+    </div>
+    {% elif rapport.contrat_invalide %}
+    <div class="od-note">
+        <strong>Plafond contractuel épuisé.</strong>
+        Le contrat {{ contrat.reference }} est devenu <strong>inactif</strong>.
+    </div>
+    {% else %}
+    <p class="od-prose">
+        Aucun dépassement de plafond. Le contrat {{ contrat.reference }} reste actif
+        avec un plafond disponible mis à jour.
+    </p>
+    {% endif %}
+</section>
+
+<section class="od-section">
+    <div class="od-section-head">
+        <span class="od-section-num">04</span>
+        <h2>Description du sinistre</h2>
+    </div>
+    <p class="od-prose">{{ sinistre.description }}</p>
+</section>
+
+<table class="od-signs">
+    <tr>
+        <td>
+            <p class="od-sign-label">Pour l'assureur</p>
+            <p class="od-sign-name">{{ assureur }}</p>
+            <p class="od-sign-meta">Service indemnisation
+                {% if rapport.genere_par %}<br>Établi par {{ rapport.genere_par.get_full_name|default:rapport.genere_par.username }}{% endif %}
+            </p>
+            <div class="od-sign-line">Cachet et signature</div>
+        </td>
+        <td>
+            <p class="od-sign-label">Le souscripteur</p>
+            <p class="od-sign-name">{{ client.display_name }}</p>
+            <p class="od-sign-meta">Copie officielle du rapport</p>
+            <div class="od-sign-line">Pour information</div>
+        </td>
+    </tr>
+</table>
+
+<p class="od-legal">
+    Ce document constitue la copie officielle du rapport d'indemnisation SONAS.
+    Il peut être présenté avec le document de retrait bancaire associé, le cas échéant.
+</p>
+
+{% include 'documents/partials/od_footer.html' with doc_ref=rapport.reference doc_service="Service indemnisation" %}
+{% endblock %}

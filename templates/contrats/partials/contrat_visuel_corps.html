@@ -116,8 +116,8 @@
             </div>
             {% if readonly %}
             <p class="contrat-visuel-p">
-                Prime annuelle : <span class="contrat-readonly-value">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} €{% else %}—{% endif %}</span>.
-                Plafond : <span class="contrat-readonly-value">{{ contrat.plafond_indemnisation }} €</span>.
+                Prime annuelle : <span class="contrat-readonly-value">{% if contrat.montant_annuel %}{{ contrat.montant_annuel }} ${% else %}—{% endif %}</span>.
+                Plafond : <span class="contrat-readonly-value">{{ contrat.plafond_indemnisation }} $</span>.
             </p>
             {% else %}
             <div class="contrat-fields-grid contrat-fields-grid--2">

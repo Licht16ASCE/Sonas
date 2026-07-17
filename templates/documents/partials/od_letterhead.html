@@ -1,0 +1,16 @@
+{# En-tête officiel commun à tous les PDF SONAS #}
+<header class="od-letterhead">
+    <div class="od-brand-mark">
+        <div class="od-brand-glyph" aria-hidden="true">S</div>
+        <div>
+            <p class="od-brand-name">SONAS</p>
+            <p class="od-brand-tag">{{ assureur|default:"SONAS Assurances" }}</p>
+        </div>
+    </div>
+    <div class="od-letterhead-meta">
+        <strong>{{ doc_kind|default:"Document officiel" }}</strong>
+        {% if doc_ref %}Réf. {{ doc_ref }}<br>{% endif %}
+        {% if doc_date %}{{ doc_date }}{% endif %}
+    </div>
+</header>
+<hr class="od-rule">

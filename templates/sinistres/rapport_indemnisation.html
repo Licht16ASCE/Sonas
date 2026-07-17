@@ -15,14 +15,14 @@
             <div class="sonas-card p-6">
                 <h2 class="font-bold mb-4">Synthèse financière</h2>
                 <dl class="space-y-3 text-sm">
-                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant demandé</dt><dd class="font-medium">{{ rapport.montant_demande }} €</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ rapport.montant_indemnise }} €</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant demandé</dt><dd class="font-medium">{{ rapport.montant_demande }} $</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant indemnisé</dt><dd class="font-semibold text-emerald-600">{{ rapport.montant_indemnise }} $</dd></div>
                     {% if rapport.montant_non_couvert %}
-                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant non couvert</dt><dd class="font-medium text-red-600">{{ rapport.montant_non_couvert }} €</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Montant non couvert</dt><dd class="font-medium text-red-600">{{ rapport.montant_non_couvert }} $</dd></div>
                     {% endif %}
-                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{{ rapport.plafond_sinistre }} €</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat (avant)</dt><dd class="font-medium">{{ rapport.plafond_contrat_avant }} €</dd></div>
-                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat (après)</dt><dd class="font-medium">{{ rapport.plafond_contrat_apres }} €</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond sinistre</dt><dd class="font-medium">{{ rapport.plafond_sinistre }} $</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat (avant)</dt><dd class="font-medium">{{ rapport.plafond_contrat_avant }} $</dd></div>
+                    <div class="flex justify-between gap-4"><dt class="text-slate-500">Plafond contrat (après)</dt><dd class="font-medium">{{ rapport.plafond_contrat_apres }} $</dd></div>
                 </dl>
             </div>
 
@@ -48,7 +48,7 @@
             {% if rapport.document %}
             <div class="sonas-card p-5">
                 <h2 class="font-bold text-sm mb-3">Document</h2>
-                <a href="{{ rapport.document.fichier.url }}" class="sonas-btn sonas-btn-primary sonas-btn-sm w-full justify-center" target="_blank" download>Télécharger la copie</a>
+                <a href="{% if user.is_client %}{% url 'documents_client:preview' rapport.document.pk %}{% else %}{% url 'documents:preview' rapport.document.pk %}{% endif %}" class="sonas-btn sonas-btn-primary sonas-btn-sm w-full justify-center">Aperçu / télécharger le PDF</a>
                 {% if rapport.copie_client_envoyee and user.is_client %}
                 <p class="text-xs text-slate-500 mt-3">Copie transmise au client le {{ rapport.created_at|date:"d/m/Y" }}.</p>
                 {% elif rapport.copie_client_envoyee %}
