@@ -3,15 +3,13 @@ Procédure d'indemnisation automatique à la validation d'un sinistre.
 """
 from decimal import Decimal
 
-from django.core.files.base import ContentFile
 from django.db import transaction
 from django.utils import timezone
 
-from documents.models import Document, DocumentType
 from notifications.models import NotificationType
 from notifications.services import create_notification, notify_staff, STAFF_ROLES_ALL
 from core.currency import format_usd
-from contrats.services import generate_retrait_bancaire_pdf
+from contrats.services import generate_rapport_indemnisation_pdf, generate_retrait_bancaire_pdf
 
 from .models import RapportIndemnisation, Sinistre, SinistreStatut, StatutRetraitPaiement
 
@@ -27,6 +25,7 @@ def _decimal(value):
 
 
 def _build_report_content(sinistre, rapport, contrat):
+    """Texte résumé archivé sur le modèle (compatibilité / recherche)."""
     client = sinistre.client
     lines = [
         'SONAS — RAPPORT D\'INDEMNISATION',
@@ -54,7 +53,6 @@ def _build_report_content(sinistre, rapport, contrat):
         lines.append('Dépassement de plafond détecté : OUI')
         if rapport.contrat_invalide:
             lines.append('Le contrat est devenu INACTIF (plafond dépassé ou épuisé).')
-            lines.append('Les déclarations de sinistre ne sont plus possibles sur ce contrat.')
         else:
             lines.append('Le contrat reste actif avec plafond mis à jour.')
     else:
@@ -152,18 +150,7 @@ def lancer_indemnisation(sinistre, montant_demande, valide_par):
     rapport.contenu = _build_report_content(sinistre, rapport, contrat)
     rapport.save()
 
-    doc = Document(
-        sinistre=sinistre,
-        type_document=DocumentType.RAPPORT,
-        titre=f'Rapport d\'indemnisation {rapport.reference}',
-        uploaded_by=valide_par,
-    )
-    doc.fichier.save(
-        f'{rapport.reference}.txt',
-        ContentFile(rapport.contenu.encode('utf-8')),
-    )
-    doc.save()
-
+    doc = generate_rapport_indemnisation_pdf(rapport, valide_par)
     rapport.document = doc
     rapport.copie_client_envoyee = True
     rapport.save(update_fields=['document', 'copie_client_envoyee'])

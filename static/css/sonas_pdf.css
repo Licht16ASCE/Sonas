@@ -1,0 +1,637 @@
+/*
+  SONAS — Documents officiels
+  Aperçu : thème app (clair/sombre) + feuille papier physique
+  PDF : même feuille papier (fond blanc/crème), accents brand indigo
+*/
+@page {
+  size: A4;
+  margin: 0;
+}
+
+:root {
+  /* Aligné design system SONAS (sonas.css) */
+  --sonas-primary: #4f46e5;
+  --sonas-primary-hover: #4338ca;
+  --sonas-primary-light: #eef2ff;
+  --ink: #0f172a;
+  --ink-soft: #334155;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line-strong: #4f46e5;
+  --paper: #fffcf8;
+  --paper-edge: #f1ebe3;
+  --wash: #f8fafc;
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --ok: #059669;
+  --ok-wash: #ecfdf5;
+  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, "Times New Roman", serif;
+  --sans: "Plus Jakarta Sans", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --desk: #e8ecf4;
+  --desk-pattern: rgba(79, 70, 229, 0.04);
+  --bar-bg: #0f172a;
+  --bar-text: #f8fafc;
+  --bar-muted: #94a3b8;
+}
+
+html.dark {
+  --desk: #0b1220;
+  --desk-pattern: rgba(129, 140, 248, 0.06);
+  --bar-bg: #020617;
+  --bar-text: #f1f5f9;
+  --bar-muted: #94a3b8;
+  /* Le papier reste clair (contrat physique) même en thème sombre */
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body.sonas-doc {
+  font-family: var(--sans);
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--desk);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+/* Bureau / fond d'aperçu thématisé */
+body.sonas-doc-screen {
+  background-color: var(--desk);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, var(--desk-pattern), transparent),
+    linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.03) 100%);
+}
+
+body.sonas-doc-pdf {
+  background: var(--paper) !important;
+  min-height: auto;
+}
+
+/* —— Barre d'aperçu (thème app) —— */
+.sonas-doc-preview-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--bar-bg);
+  color: var(--bar-text);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.35);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25);
+}
+
+.sonas-doc-preview-bar .meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sonas-doc-preview-bar .meta strong { font-size: 14px; letter-spacing: 0.01em; }
+.sonas-doc-preview-bar .meta span { font-size: 11px; color: var(--bar-muted); }
+.sonas-doc-preview-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+.sonas-doc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 0.625rem;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.sonas-doc-btn-primary {
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #fff;
+  box-shadow: 0 1px 2px rgb(79 70 229 / 0.4);
+}
+.sonas-doc-btn-primary:hover {
+  background: linear-gradient(135deg, #4338ca 0%, #4f46e5 100%);
+  transform: translateY(-1px);
+}
+.sonas-doc-btn-secondary {
+  background: transparent;
+  color: var(--bar-text);
+  border-color: #475569;
+}
+.sonas-doc-btn-secondary:hover { background: rgba(148, 163, 184, 0.12); }
+
+.sonas-doc-theme-hint {
+  font-size: 11px;
+  color: var(--bar-muted);
+  padding: 4px 8px;
+  border: 1px solid #334155;
+  border-radius: 999px;
+}
+
+/* —— Scène papier —— */
+.sonas-doc-stage {
+  padding: 36px 16px 64px;
+  display: flex;
+  justify-content: center;
+}
+
+body.sonas-doc-pdf .sonas-doc-stage { padding: 0; }
+
+.sonas-doc-page {
+  position: relative;
+  width: 100%;
+  max-width: 794px;
+  /* Empilement de feuilles derrière */
+}
+
+body.sonas-doc-screen .sonas-doc-page::before,
+body.sonas-doc-screen .sonas-doc-page::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 2px;
+  z-index: -1;
+  pointer-events: none;
+}
+
+body.sonas-doc-screen .sonas-doc-page::before {
+  transform: translate(5px, 6px) rotate(0.4deg);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  opacity: 0.95;
+}
+
+body.sonas-doc-screen .sonas-doc-page::after {
+  transform: translate(10px, 11px) rotate(0.85deg);
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.06);
+  opacity: 0.75;
+}
+
+body.sonas-doc-pdf .sonas-doc-page {
+  max-width: none;
+}
+
+/* Feuille A4 physique */
+.od-sheet {
+  position: relative;
+  background:
+    linear-gradient(90deg, rgba(239, 68, 68, 0.14) 0, rgba(239, 68, 68, 0.14) 1.25px, transparent 1.25px) 48px 0 / 100% 100% no-repeat,
+    radial-gradient(ellipse at 20% 0%, rgba(79, 70, 229, 0.03), transparent 55%),
+    linear-gradient(180deg, #fffefb 0%, var(--paper) 45%, #f7f3ec 100%);
+  color: var(--ink);
+  padding: 18mm 18mm 20mm 22mm;
+  max-width: none;
+  border: 1px solid var(--paper-edge);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 25px 50px -12px rgba(15, 23, 42, 0.28),
+    0 8px 16px rgba(15, 23, 42, 0.08);
+}
+
+body.sonas-doc-pdf .od-sheet {
+  border: none;
+  box-shadow: none;
+  /* Lignes de cahier plus discrètes à l'impression */
+  background:
+    linear-gradient(90deg, rgba(239, 68, 68, 0.18) 0, rgba(239, 68, 68, 0.18) 1px, transparent 1px) 48px 0 / 100% 100% no-repeat,
+    #fffcf8;
+  padding: 16mm 16mm 18mm 20mm;
+}
+
+/* Coin papier */
+body.sonas-doc-screen .od-sheet::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(225deg, var(--desk) 50%, transparent 50%);
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+/* —— Letterhead —— */
+.od-letterhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--accent);
+  margin-bottom: 4px;
+}
+
+.od-brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.od-brand-glyph {
+  width: 36px;
+  height: 36px;
+  border-radius: 0.65rem;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+}
+
+.od-brand-name {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 15pt;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  line-height: 1.1;
+}
+
+.od-brand-tag {
+  margin: 3px 0 0;
+  font-size: 8pt;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.od-letterhead-meta {
+  text-align: right;
+  font-size: 8.5pt;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.od-letterhead-meta strong {
+  display: block;
+  color: var(--ink);
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.od-rule {
+  height: 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 0 0 20px;
+}
+
+.od-doc-title {
+  text-align: center;
+  margin: 0 0 16px;
+}
+
+.od-doc-title h1 {
+  margin: 0 0 8px;
+  font-family: var(--serif);
+  font-size: 16.5pt;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.od-doc-kicker {
+  margin: 0 0 6px;
+  font-family: var(--sans);
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.od-ref {
+  display: inline-block;
+  margin-top: 4px;
+  font-family: var(--sans);
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  border: 1px solid #c7d2fe;
+  background: var(--accent-soft);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.od-meta-line {
+  text-align: center;
+  font-size: 8.5pt;
+  color: var(--muted);
+  margin: 0 0 20px;
+}
+
+.od-meta-line strong { color: var(--ink-soft); font-weight: 600; }
+
+.od-section {
+  margin: 0 0 16px;
+  page-break-inside: avoid;
+}
+
+.od-section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--line);
+}
+
+.od-section-num {
+  font-family: var(--sans);
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  min-width: 1.6em;
+}
+
+.od-section-head h2 {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.od-prose {
+  font-family: var(--serif);
+  font-size: 10pt;
+  line-height: 1.65;
+  text-align: justify;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.od-prose strong { font-weight: 700; color: var(--ink); }
+
+.od-list {
+  margin: 4px 0 10px;
+  padding: 0 0 0 18px;
+  font-family: var(--serif);
+  font-size: 10pt;
+}
+
+.od-list li { margin: 0 0 5px; text-align: justify; }
+
+.od-note {
+  font-family: var(--serif);
+  font-size: 9.5pt;
+  font-style: italic;
+  color: var(--ink-soft);
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  border-radius: 0 6px 6px 0;
+}
+
+.od-parties {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 8px;
+  table-layout: fixed;
+}
+
+.od-parties td {
+  width: 50%;
+  vertical-align: top;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.od-party-label {
+  font-family: var(--sans);
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 6px;
+}
+
+.od-party-name {
+  font-family: var(--serif);
+  font-size: 11pt;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.od-party-meta {
+  font-family: var(--sans);
+  font-size: 8.5pt;
+  color: var(--ink-soft);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.od-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 14px;
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.od-table th,
+.od-table td {
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.od-table th {
+  width: 34%;
+  background: var(--wash);
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 8pt;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.od-table thead th {
+  width: auto;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 7.5pt;
+}
+
+.od-table .hl {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.od-callout {
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  background: rgba(238, 242, 255, 0.55);
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  border-radius: 0 8px 8px 0;
+}
+
+.od-callout.ok {
+  border-left-color: var(--ok);
+  background: var(--ok-wash);
+}
+
+.od-callout-label {
+  margin: 0 0 4px;
+  font-family: var(--sans);
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.od-amount {
+  margin: 0 0 8px;
+  font-family: var(--sans);
+  font-size: 20pt;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ok);
+  line-height: 1.1;
+}
+
+.od-callout p {
+  margin: 0;
+  font-size: 9.5pt;
+  color: var(--ink-soft);
+}
+
+.od-callout p + p { margin-top: 6px; }
+
+.od-signs {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 28px 0 10px;
+  page-break-inside: avoid;
+}
+
+.od-signs td {
+  width: 48%;
+  vertical-align: top;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.od-sign-label {
+  font-family: var(--sans);
+  font-size: 7.5pt;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+.od-sign-name {
+  font-family: var(--serif);
+  font-size: 10.5pt;
+  font-weight: 700;
+  margin: 0 0 2px;
+}
+
+.od-sign-meta {
+  font-size: 8.5pt;
+  color: var(--muted);
+  margin: 0;
+}
+
+.od-sign-line {
+  margin-top: 36px;
+  border-top: 1px solid #94a3b8;
+  padding-top: 6px;
+  font-size: 8pt;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.od-footer {
+  margin-top: 28px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-family: var(--sans);
+  font-size: 7.5pt;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.45;
+}
+
+.od-legal {
+  margin: 18px 0 0;
+  font-family: var(--serif);
+  font-size: 8.5pt;
+  font-style: italic;
+  color: var(--ink-soft);
+  text-align: justify;
+}
+
+.od-steps {
+  margin: 6px 0 0;
+  padding: 0 0 0 16px;
+  font-family: var(--sans);
+  font-size: 9.5pt;
+  color: var(--ink-soft);
+}
+
+.od-steps li { margin: 0 0 4px; }
+
+.od-paper-caption {
+  display: none;
+}
+
+body.sonas-doc-screen .od-paper-caption {
+  display: block;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+html.dark body.sonas-doc-screen .od-paper-caption {
+  color: #94a3b8;
+}
+
+@media print {
+  body.sonas-doc { background: #fff; }
+  .sonas-doc-preview-bar,
+  .od-paper-caption { display: none !important; }
+  .sonas-doc-stage { padding: 0; }
+  .sonas-doc-page::before,
+  .sonas-doc-page::after { display: none !important; }
+  .od-sheet {
+    box-shadow: none;
+    border: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sonas-doc-stage { padding: 20px 10px 40px; }
+  .od-sheet { padding: 14mm 12mm 16mm 14mm; }
+  body.sonas-doc-screen .sonas-doc-page::before,
+  body.sonas-doc-screen .sonas-doc-page::after { display: none; }
+}

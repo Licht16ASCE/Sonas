@@ -21,7 +21,7 @@ Application web Django pour la gestion des clients, biens immobiliers, contrats 
 | Base de données | PostgreSQL (SQLite en fallback sans Docker) |
 | Cache / tâches async | Redis + Celery *(optionnel en dev)* |
 | Frontend | TailwindCSS + Alpine.js |
-| PDF | xhtml2pdf |
+| PDF | Playwright (Chromium) — même stack que WeddingPlanner |
 | Auth | Django Auth + rôles métier |
 
 ## Architecture des espaces
@@ -110,6 +110,7 @@ venv\Scripts\activate          # Windows
 # source venv/bin/activate     # Linux / macOS
 
 pip install -r requirements.txt
+python -m playwright install chromium
 copy .env.example .env         # Windows — laisser DATABASE_URL vide pour SQLite
 # cp .env.example .env         # Linux / macOS
 
@@ -159,7 +160,7 @@ Mot de passe pour tous les comptes : **`sonas2024`**
 
 - Client **Dupont Immobilier** (`client1`)
 - Bien **BIEN-DEMO-001** (appartement, statut Validé)
-- Contrat **CTR-DEMO-001** (actif, expire dans ~20 jours, plafond **50 000 €**)
+- Contrat **CTR-DEMO-001** (actif, expire dans ~20 jours, plafond **50 000 $**)
 
 ```bash
 python manage.py seed_sonas
@@ -222,3 +223,16 @@ TFC_Francesco/
 ## Licence
 
 Projet académique / démonstration — usage interne.
+
+## Documentation UML
+
+Modélisation complète (DCU, classes, états, séquences, composants, déploiement) :
+
+- **Markdown :** [docs/README_UML.md](docs/README_UML.md)
+- **Word :** [docs/UML_SONAS.docx](docs/UML_SONAS.docx)
+
+Regénérer le fichier Word :
+
+```bash
+python scripts/generate_uml_docx.py
+```

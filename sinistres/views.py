@@ -502,12 +502,17 @@ def rapport_indemnisation_detail(request, pk):
         if sinistre.client.user_id != request.user.pk:
             messages.error(request, 'Accès refusé.')
             return redirect('sinistres_client:list')
-        template = 'sinistres/rapport_indemnisation.html'
+
+    # Même aperçu papier / PDF que les autres documents officiels
+    if rapport.document_id:
+        ns = 'documents_client' if request.user.is_client else 'documents'
+        return redirect(f'{ns}:preview', pk=rapport.document_id)
+
+    if request.user.is_client:
         back_url = 'sinistres_client:detail'
     else:
-        template = 'sinistres/rapport_indemnisation.html'
         back_url = 'sinistres:detail'
-    return render(request, template, {
+    return render(request, 'sinistres/rapport_indemnisation.html', {
         'rapport': rapport,
         'sinistre': sinistre,
         'back_url': back_url,
