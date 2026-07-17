@@ -1,5 +1,7 @@
 from django.conf import settings
+from django.http import JsonResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_GET
 
 from core.decorators import admin_required, internal_required
 
@@ -7,6 +9,36 @@ from core.decorators import admin_required, internal_required
 def landing(request):
     """Page d'accueil publique."""
     return render(request, 'core/landing.html')
+
+
+@require_GET
+def geo_adresse_search(request):
+    """Suggestions d'adresses OpenStreetMap limitées à une ville RDC."""
+    ville = (request.GET.get('ville') or '').strip()
+    query = (request.GET.get('q') or '').strip()
+    if not ville:
+        return JsonResponse({'results': [], 'error': 'Sélectionnez d\'abord une ville.'}, status=400)
+    if len(query) < 3:
+        return JsonResponse({'results': [], 'ville': ville})
+
+    from core.geocode_rdc import search_adresses_rdc
+
+    results, api_ok = search_adresses_rdc(ville, query, limit=6)
+    payload = {'results': results, 'ville': ville, 'api_ok': api_ok}
+    if not api_ok:
+        payload['error'] = 'Service cartographique temporairement indisponible.'
+    return JsonResponse(payload)
+
+
+@require_GET
+def geo_adresse_verify(request):
+    """Vérifie qu'une adresse est localisable en RDC pour la ville donnée."""
+    ville = (request.GET.get('ville') or '').strip()
+    adresse = (request.GET.get('adresse') or '').strip()
+    from core.geocode_rdc import verify_adresse_rdc
+
+    ok, detail, error = verify_adresse_rdc(adresse, ville)
+    return JsonResponse({'ok': ok, 'result': detail, 'error': error, 'ville': ville})
 
 
 @internal_required

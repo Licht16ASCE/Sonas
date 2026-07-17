@@ -1,13 +1,15 @@
-from datetime import date, timedelta
-
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from datetime import date, timedelta
+
+from django.core.files.base import ContentFile
 
 from core.decorators import client_required, internal_required
 from core.filters import FILTER_CHOICES, get_active_filter
 from clients.models import ActiviteClient
 from clients.services import log_client_activity
+from documents.models import Document, DocumentType
 from notifications.models import ActionType
 from notifications.services import (
     create_notification,
@@ -15,9 +17,9 @@ from notifications.services import (
     notify_staff,
     resolve_pending_for_object,
 )
-from .forms import ClientContratForm, ContratForm
-from .models import Contrat, ContratStatut
-from .services import generate_contrat_pdf, get_biens_metadata
+from .forms import ClientContratForm, ContratForm, PreuvePaiementForm
+from .models import Contrat, ContratStatut, PreuvePaiement
+from .services import generate_bon_paiement_pdf, generate_contrat_pdf, get_biens_metadata
 
 
 @client_required
@@ -31,21 +33,70 @@ def contrat_list_client(request):
 def contrat_detail_client(request, pk):
     client = request.user.client_profile
     contrat = get_object_or_404(
-        Contrat.objects.select_related('bien'),
+        Contrat.objects.select_related('bien', 'grille_tarifaire', 'police_assurance'),
         pk=pk, client=client,
     )
     sinistres = contrat.sinistres.all()[:5]
+    preuves = contrat.preuves_paiement.all()[:5]
     return render(request, 'contrats/detail.html', {
         'contrat': contrat,
         'sinistres': sinistres,
         'show_next_steps': True,
         'document_contrat': contrat.document_contractuel,
+        'document_bon_paiement': contrat.document_bon_paiement,
+        'preuves': preuves,
+        'preuve_form': PreuvePaiementForm(),
+        'police': getattr(contrat, 'police_assurance', None),
     })
 
 
 @client_required
+def contrat_upload_preuve(request, pk):
+    client = request.user.client_profile
+    contrat = get_object_or_404(Contrat, pk=pk, client=client)
+    if request.method != 'POST':
+        return redirect('contrats_client:detail', pk=pk)
+
+    form = PreuvePaiementForm(request.POST, request.FILES)
+    if not form.is_valid():
+        messages.error(request, 'Fichier de preuve invalide.')
+        return redirect('contrats_client:detail', pk=pk)
+
+    fichier = form.cleaned_data['fichier']
+    content = fichier.read()
+    name = fichier.name
+
+    preuve = PreuvePaiement(
+        client=client,
+        contrat=contrat,
+        uploaded_by=request.user,
+    )
+    preuve.fichier.save(name, ContentFile(content), save=True)
+
+    doc = Document(
+        contrat=contrat,
+        type_document=DocumentType.PREUVE_PAIEMENT,
+        titre=f'Preuve de paiement {preuve.reference}',
+        uploaded_by=request.user,
+    )
+    doc.fichier.save(name, ContentFile(content), save=True)
+    preuve.document = doc
+    preuve.save(update_fields=['document'])
+
+    notify_staff(
+        title=f'Preuve de paiement — {contrat.reference}',
+        message=f'{client.display_name} a déposé une preuve ({preuve.reference}).',
+        obj=contrat,
+        pending_action_type=ActionType.CONTRAT_NON_FINALISE,
+        pending_title=f'Valider le paiement {contrat.reference}',
+        pending_description=f'Preuve {preuve.reference} à contrôler',
+    )
+    messages.success(request, 'Preuve de paiement déposée. Un agent la validera.')
+    return redirect('contrats_client:detail', pk=pk)
+
+
+@client_required
 def contrat_create_client(request):
-    """Souscription via contrat visuel — PDF puis consolidation documentaire."""
     client = request.user.client_profile
     contrat_preview = Contrat(client=client)
 
@@ -54,41 +105,42 @@ def contrat_create_client(request):
         if form.is_valid():
             contrat = form.save(commit=False)
             contrat.client = client
-            contrat.statut = ContratStatut.BROUILLON
+            contrat.statut = ContratStatut.EN_ATTENTE
             contrat.date_souscription = timezone.now()
             contrat.save()
 
             generate_contrat_pdf(contrat, request.user)
+            generate_bon_paiement_pdf(contrat, request.user)
 
             log_client_activity(
                 client, ActiviteClient.TypeActivite.CONTRAT_CREE,
-                f'Souscription contrat {contrat.reference} (contrat visuel signé)',
+                f'Souscription contrat {contrat.reference}',
                 request.user,
             )
             create_notification(
                 user=request.user,
                 notif_type='STATUT_CHANGE',
                 title=f'Contrat {contrat.reference} enregistré',
-                message='Votre contrat a été généré au format PDF. Complétez le dossier avec vos justificatifs.',
+                message='Contrat et bon de paiement générés. Déposez votre preuve de paiement.',
                 obj=contrat,
             )
             create_pending_action(
                 user=request.user,
                 action_type='DOCUMENTS_MANQUANTS',
                 title=f'Consolider le dossier {contrat.reference}',
-                description='Ajoutez les justificatifs complémentaires pour votre contrat.',
+                description='Ajoutez les justificatifs et la preuve de paiement.',
                 obj=contrat.bien,
             )
             notify_staff(
                 title=f'Contrat {contrat.reference} à activer',
-                message=f'{client.display_name} a signé un contrat visuel pour {contrat.bien.reference}.',
+                message=f'{client.display_name} a souscrit pour {contrat.bien.reference}.',
                 obj=contrat,
                 pending_action_type=ActionType.CONTRAT_NON_FINALISE,
                 pending_title=f'Activer le contrat {contrat.reference}',
-                pending_description=f'Client : {client.display_name} — PDF contractuel disponible',
+                pending_description=f'Client : {client.display_name}',
             )
-            messages.success(request, 'Contrat signé et enregistré. Ajoutez vos documents complémentaires.')
-            return redirect('contrats_client:consolidation', pk=contrat.pk)
+            messages.success(request, 'Contrat enregistré. Téléchargez le bon de paiement.')
+            return redirect('contrats_client:detail', pk=contrat.pk)
     else:
         form = ClientContratForm(client=client)
 
@@ -106,40 +158,40 @@ def contrat_create_client(request):
         'biens_meta': get_biens_metadata(client, biens_qs),
         'guide_steps': [
             'Lire et compléter le contrat',
-            'Signer (génération PDF)',
-            'Ajouter les documents',
+            'Génération PDF + bon de paiement',
+            'Déposer preuve de paiement',
             'Activation par un agent',
         ],
         'guide_tip': (
-            f'{biens_eligibles} bien{"s" if biens_eligibles > 1 else ""} éligible{"s" if biens_eligibles > 1 else ""}. '
-            'Les champs en encadré sont les seules zones à modifier. '
-            'Vérifiez le plafond d\'indemnisation avant signature.'
+            f'{biens_eligibles} bien{"s" if biens_eligibles > 1 else ""} '
+            f'éligible{"s" if biens_eligibles > 1 else ""}. Montants en USD ($).'
         ),
     })
 
 
 @client_required
 def contrat_consolidation_client(request, pk):
-    """Étape post-signature : upload des documents pour consolider le dossier."""
     client = request.user.client_profile
     contrat = get_object_or_404(
         Contrat.objects.select_related('bien'),
         pk=pk, client=client,
     )
     documents_bien = contrat.bien.documents.exclude(
-        type_document='CONTRAT_PDF',
+        type_document__in=('CONTRAT_PDF', 'BON_PAIEMENT', 'PREUVE_PAIEMENT', 'RETRAIT_BANCAIRE'),
     ).order_by('-created_at')[:10]
     return render(request, 'contrats/consolidation.html', {
         'contrat': contrat,
         'document_contrat': contrat.document_contractuel,
+        'document_bon_paiement': contrat.document_bon_paiement,
         'documents_bien': documents_bien,
+        'preuve_form': PreuvePaiementForm(),
         'guide_steps': [
-            'Lire et compléter le contrat',
-            'Signer (génération PDF)',
-            'Ajouter les documents',
-            'Activation par un agent',
+            'Contrat généré',
+            'Bon de paiement',
+            'Documents + preuve',
+            'Activation agent',
         ],
-        'guide_tip': 'Ajoutez titre de propriété, bail ou état des lieux pour accélérer l\'activation du contrat.',
+        'guide_tip': 'Ajoutez titre de propriété / bail et la preuve de paiement bancaire.',
     })
 
 
@@ -149,7 +201,7 @@ def contrat_list(request):
     qs = Contrat.objects.select_related('client', 'client__user', 'bien')
 
     if filter_key == 'en_attente':
-        qs = qs.filter(statut=ContratStatut.BROUILLON)
+        qs = qs.filter(statut__in=(ContratStatut.EN_ATTENTE, ContratStatut.BROUILLON))
     elif filter_key == 'valides':
         qs = qs.filter(statut=ContratStatut.ACTIF)
     elif filter_key == 'rejetes':
@@ -170,19 +222,29 @@ def contrat_list(request):
 @internal_required
 def contrat_detail(request, pk):
     contrat = get_object_or_404(
-        Contrat.objects.select_related('client', 'client__user', 'bien'), pk=pk
+        Contrat.objects.select_related(
+            'client', 'client__user', 'bien', 'grille_tarifaire', 'police_assurance',
+        ),
+        pk=pk,
     )
     sinistres = contrat.sinistres.all()
+    preuves = contrat.preuves_paiement.select_related('uploaded_by', 'document').all()
     return render(request, 'contrats/detail_internal.html', {
         'contrat': contrat,
         'sinistres': sinistres,
         'document_contrat': contrat.document_contractuel,
+        'document_bon_paiement': contrat.document_bon_paiement,
+        'preuves': preuves,
+        'police': getattr(contrat, 'police_assurance', None),
+        'peut_activer': contrat.peut_etre_active,
     })
 
 
 @internal_required
 def contrat_create(request):
     from clients.models import Client
+    from django.urls import reverse
+
     client_id = request.GET.get('client')
     client = Client.objects.filter(pk=client_id).first() if client_id else None
 
@@ -197,11 +259,12 @@ def contrat_create(request):
                 contrat.date_souscription = timezone.now()
                 contrat.save(update_fields=['date_souscription', 'updated_at'])
             generate_contrat_pdf(contrat, request.user)
+            generate_bon_paiement_pdf(contrat, request.user)
             log_client_activity(
                 client, ActiviteClient.TypeActivite.CONTRAT_CREE,
                 f'Contrat {contrat.reference} créé', request.user
             )
-            if contrat.statut == ContratStatut.BROUILLON:
+            if contrat.statut in (ContratStatut.BROUILLON, ContratStatut.EN_ATTENTE):
                 create_pending_action(
                     user=request.user,
                     action_type='CONTRAT_NON_FINALISE',
@@ -215,7 +278,6 @@ def contrat_create(request):
         form = ContratForm(client=client)
 
     clients = Client.objects.filter(is_active=True).select_related('user')
-    from django.urls import reverse
     return render(request, 'contrats/form_internal.html', {
         'form': form,
         'clients': clients,
@@ -226,17 +288,54 @@ def contrat_create(request):
         'help_steps': [
             'Sélectionnez le client',
             'Choisissez un bien validé',
-            'Définissez les dates et la prime',
-            'Activez le contrat depuis la fiche contrat',
+            'Définissez les dates et la prime (USD)',
+            'Activez après documents + paiement validés',
         ],
-        'help_note': 'Seuls les biens au statut validé sont proposés à la souscription.',
+        'help_note': 'Préférez la déclaration de bien : police et contrat sont générés automatiquement.',
     })
+
+
+@internal_required
+def contrat_validate_paiement(request, pk):
+    contrat = get_object_or_404(Contrat, pk=pk)
+    if request.method != 'POST':
+        return redirect('contrats:detail', pk=pk)
+
+    preuve_id = request.POST.get('preuve_id')
+    preuve = get_object_or_404(PreuvePaiement, pk=preuve_id, contrat=contrat)
+    preuve.is_validated = True
+    preuve.validee_par = request.user
+    preuve.date_validation = timezone.now()
+    preuve.save(update_fields=['is_validated', 'validee_par', 'date_validation'])
+
+    contrat.paiement_valide = True
+    contrat.save(update_fields=['paiement_valide', 'updated_at'])
+
+    create_notification(
+        user=contrat.client.user,
+        notif_type='STATUT_CHANGE',
+        title=f'Paiement validé — {contrat.reference}',
+        message='Votre preuve de paiement a été acceptée. Le contrat pourra être activé.',
+        obj=contrat,
+    )
+    messages.success(request, 'Paiement validé.')
+    return redirect('contrats:detail', pk=pk)
 
 
 @internal_required
 def contrat_activate(request, pk):
     contrat = get_object_or_404(Contrat, pk=pk)
     if request.method == 'POST':
+        if not contrat.paiement_valide:
+            messages.error(request, 'Le paiement doit être validé avant activation.')
+            return redirect('contrats:detail', pk=pk)
+        if not contrat.documents_requis_complets:
+            messages.error(request, 'Des documents justificatifs du bien sont encore manquants.')
+            return redirect('contrats:detail', pk=pk)
+        if contrat.bien.statut != 'VALIDE':
+            messages.error(request, 'Le bien doit être validé avant activation du contrat.')
+            return redirect('contrats:detail', pk=pk)
+
         contrat.statut = ContratStatut.ACTIF
         contrat.save(update_fields=['statut', 'updated_at'])
         resolve_pending_for_object(contrat, action_type=ActionType.CONTRAT_NON_FINALISE)
