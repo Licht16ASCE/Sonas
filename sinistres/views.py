@@ -19,6 +19,7 @@ from notifications.services import (
     resolve_pending_for_object,
 )
 from notifications.models import ActionType
+from documents.models import Document, DocumentType
 from .forms import SinistreForm, SinistreTraitementForm, SinistreValidationForm
 from .models import Sinistre, SinistreStatut
 from .services import IndemnisationError, lancer_indemnisation
@@ -109,7 +110,9 @@ def sinistre_create_client(request):
 def sinistre_detail_client(request, pk):
     client = request.user.client_profile
     sinistre = get_object_or_404(
-        Sinistre.objects.select_related('contrat', 'contrat__bien').prefetch_related(
+        Sinistre.objects.select_related(
+            'contrat', 'contrat__bien', 'document_retrait_bancaire', 'preuve_retrait_indemnisation',
+        ).prefetch_related(
             'documents', 'rapports_indemnisation__document',
         ),
         pk=pk, contrat__client=client,
@@ -118,6 +121,51 @@ def sinistre_detail_client(request, pk):
         'sinistre': sinistre,
         'rapport': sinistre.rapport_indemnisation,
     })
+
+
+@client_required
+def sinistre_upload_preuve_retrait(request, pk):
+    """Le client dépose la preuve de retrait bancaire → statut VERT."""
+    from .models import StatutRetraitPaiement
+    from django.core.files.base import ContentFile
+
+    client = request.user.client_profile
+    sinistre = get_object_or_404(Sinistre, pk=pk, contrat__client=client)
+    if request.method != 'POST':
+        return redirect('sinistres_client:detail', pk=pk)
+
+    if not sinistre.montant_indemnise:
+        messages.error(request, 'Aucune indemnisation enregistrée sur ce dossier.')
+        return redirect('sinistres_client:detail', pk=pk)
+
+    fichier = request.FILES.get('preuve_retrait')
+    if not fichier:
+        messages.error(request, 'Veuillez sélectionner un fichier.')
+        return redirect('sinistres_client:detail', pk=pk)
+
+    content = fichier.read()
+    doc = Document(
+        sinistre=sinistre,
+        type_document=DocumentType.PREUVE_PAIEMENT,
+        titre=f'Preuve de retrait — {sinistre.reference}',
+        uploaded_by=request.user,
+    )
+    doc.fichier.save(fichier.name, ContentFile(content), save=True)
+
+    sinistre.preuve_retrait_indemnisation = doc
+    sinistre.statut_retrait_paiement = StatutRetraitPaiement.VERT
+    sinistre.save(update_fields=[
+        'preuve_retrait_indemnisation', 'statut_retrait_paiement', 'updated_at',
+    ])
+    create_notification(
+        user=request.user,
+        notif_type='STATUT_CHANGE',
+        title=f'Preuve de retrait enregistrée — {sinistre.reference}',
+        message='Votre preuve a été enregistrée. L\'état d\'indemnisation est passé au vert.',
+        obj=sinistre,
+    )
+    messages.success(request, 'Preuve de retrait déposée — statut vert.')
+    return redirect('sinistres_client:detail', pk=pk)
 
 
 @internal_required
@@ -313,7 +361,7 @@ def sinistre_traiter(request, pk):
 
     if sinistre.indemnisation_accordee:
         desc = (
-            f'Indemnisation proposée : {sinistre.montant_indemnisation_propose:.2f} € — '
+            f'Indemnisation proposée : {sinistre.montant_indemnisation_propose:.2f} $ — '
             f'Client : {sinistre.client.display_name}'
         )
     else:
@@ -342,7 +390,7 @@ def sinistre_traiter(request, pk):
         messages.success(
             request,
             f'Dossier transmis au gérant avec indemnisation proposée de '
-            f'{sinistre.montant_indemnisation_propose:.2f} €.',
+            f'{sinistre.montant_indemnisation_propose:.2f} $.',
         )
     else:
         messages.success(request, 'Dossier transmis au gérant (sans indemnisation).')
@@ -406,7 +454,7 @@ def sinistre_validate(request, pk):
                 )
                 messages.success(
                     request,
-                    f'Sinistre clôturé. Indemnisation de {rapport.montant_indemnise:.2f} € — '
+                    f'Sinistre clôturé. Indemnisation de {rapport.montant_indemnise:.2f} $ — '
                     f'rapport {rapport.reference} généré.',
                 )
             except IndemnisationError as exc:

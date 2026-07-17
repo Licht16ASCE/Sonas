@@ -77,3 +77,29 @@ INFO 2026-07-01 16:19:35,108 middleware CRITICAL ACTION | user=agent | path=/son
 INFO 2026-07-01 16:19:35,113 audit AUDIT | user=agent | role=AGENT | action=traiter | path=/sonas/sinistres/9/traiter/ | status=302 | POST /sonas/sinistres/9/traiter/
 INFO 2026-07-01 16:20:08,289 middleware CRITICAL ACTION | user=gerant | path=/sonas/sinistres/9/valider/ | status=302
 INFO 2026-07-01 16:20:08,295 audit AUDIT | user=gerant | role=GERANT | action=cloturer | path=/sonas/sinistres/9/valider/ | status=302 | motif_rejet=
+INFO 2026-07-17 09:23:05,937 audit AUDIT | user=agent | role=AGENT | action=validate | path=/sonas/biens/7/valider/ | status=302 | statut=EN_ATTENTE | motif_rejet=
+INFO 2026-07-17 09:24:02,014 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:24:02,032 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:25:59,505 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:25:59,513 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:28:42,645 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:28:42,654 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:29:45,140 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:29:45,147 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:32:12,351 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/valider-paiement/ | status=302
+INFO 2026-07-17 09:32:12,358 audit AUDIT | user=agent | role=AGENT | action=validate_paiement | path=/sonas/contrats/8/valider-paiement/ | status=302 | POST /sonas/contrats/8/valider-paiement/
+INFO 2026-07-17 09:32:16,370 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:32:16,377 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:33:41,033 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:33:41,041 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:34:02,977 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:34:02,985 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:34:12,166 audit AUDIT | user=agent | role=AGENT | action=validate | path=/sonas/biens/7/valider/ | status=302 | statut=VALIDE | motif_rejet=
+INFO 2026-07-17 09:34:26,520 middleware CRITICAL ACTION | user=agent | path=/sonas/contrats/8/activer/ | status=302
+INFO 2026-07-17 09:34:26,525 audit AUDIT | user=agent | role=AGENT | action=activate | path=/sonas/contrats/8/activer/ | status=302 | POST /sonas/contrats/8/activer/
+INFO 2026-07-17 09:37:36,357 middleware CRITICAL ACTION | user=agent | path=/sonas/sinistres/10/statut/ | status=302
+INFO 2026-07-17 09:37:36,363 audit AUDIT | user=agent | role=AGENT | action=update_status | path=/sonas/sinistres/10/statut/ | status=302 | statut=EN_COURS
+INFO 2026-07-17 09:38:22,756 middleware CRITICAL ACTION | user=agent | path=/sonas/sinistres/10/traiter/ | status=302
+INFO 2026-07-17 09:38:22,762 audit AUDIT | user=agent | role=AGENT | action=traiter | path=/sonas/sinistres/10/traiter/ | status=302 | POST /sonas/sinistres/10/traiter/
+INFO 2026-07-17 09:39:02,425 middleware CRITICAL ACTION | user=gerant | path=/sonas/sinistres/10/valider/ | status=302
+INFO 2026-07-17 09:39:02,433 audit AUDIT | user=gerant | role=GERANT | action=cloturer | path=/sonas/sinistres/10/valider/ | status=302 | motif_rejet=

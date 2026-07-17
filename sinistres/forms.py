@@ -26,7 +26,7 @@ class SinistreForm(forms.ModelForm):
             'type_sinistre': 'Type de sinistre',
             'description': 'Description',
             'date_sinistre': 'Date du sinistre',
-            'montant_estime': 'Montant estimé (€)',
+            'montant_estime': 'Montant estimé (USD)',
             'is_urgent': 'Marquer comme urgent',
         }
 
@@ -67,7 +67,7 @@ class SinistreForm(forms.ModelForm):
                 raise ValidationError('Le plafond d\'indemnisation de ce contrat est épuisé.')
             if plafond > 0 and Decimal(str(montant_estime)) > plafond:
                 raise ValidationError(
-                    f'Le montant estimé dépasse le plafond disponible du contrat ({plafond:.2f} €).'
+                    f'Le montant estimé dépasse le plafond disponible du contrat ({plafond:.2f} $).'
                 )
         return cleaned
 
@@ -104,7 +104,7 @@ class SinistreTraitementForm(forms.ModelForm):
             }),
         }
         labels = {
-            'montant_indemnisation_propose': 'Montant proposé (€)',
+            'montant_indemnisation_propose': 'Montant proposé (USD)',
             'notes_traitement': 'Notes de traitement',
         }
 
@@ -122,8 +122,8 @@ class SinistreTraitementForm(forms.ModelForm):
         if self.instance and self.instance.plafond_indemnisation:
             plafond = self.instance.plafond_indemnisation
             self.fields['montant_indemnisation_propose'].help_text = (
-                f'Plafond sinistre : {plafond:.2f} € — '
-                f'Plafond contrat disponible : {self.instance.contrat.plafond_disponible:.2f} €'
+                f'Plafond sinistre : {plafond:.2f} $ — '
+                f'Plafond contrat disponible : {self.instance.contrat.plafond_disponible:.2f} $'
             )
 
     def clean(self):
@@ -145,7 +145,7 @@ class SinistreTraitementForm(forms.ModelForm):
                 raise ValidationError('Le plafond du contrat est épuisé.')
             if plafond_sinistre > 0 and montant > plafond_sinistre:
                 raise ValidationError(
-                    f'Le montant dépasse le plafond du sinistre ({plafond_sinistre:.2f} €).'
+                    f'Le montant dépasse le plafond du sinistre ({plafond_sinistre:.2f} $).'
                 )
         else:
             cleaned['montant_indemnisation_propose'] = None

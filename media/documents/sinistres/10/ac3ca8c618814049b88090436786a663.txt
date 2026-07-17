@@ -1,0 +1,28 @@
+SONAS — RAPPORT D'INDEMNISATION
+==================================================
+Référence rapport : 
+Référence sinistre : SIN-6DC9EF1A
+Contrat : CTR-4673B5F0
+Client : Jean Dupont
+Bien : BIEN-E367CDF1 — Lubumbashi
+Type de sinistre : Dégât des eaux
+Date du sinistre : 17/07/2026
+Date de génération : 17/07/2026 07:39
+
+--- MONTANTS (USD) ---
+Montant demandé : $3,500.00
+Plafond sinistre : $100,000.00
+Plafond contrat disponible (avant) : $100,000.00
+Montant indemnisé : $3,500.00
+Montant non couvert : $0.00
+Plafond contrat disponible (après) : $96,500.00
+
+--- DÉCISION CONTRACTUELLE ---
+Dépassement de plafond détecté : NON
+Le contrat reste actif.
+
+--- DESCRIPTION DU SINISTRE ---
+Usure de la tuyauterie,
+
+Ce document constitue la copie officielle du rapport d'indemnisation.
+SONAS — Service indemnisation

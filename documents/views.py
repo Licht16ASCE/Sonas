@@ -1,7 +1,9 @@
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db import models
-from django.shortcuts import redirect, render
+from django.http import FileResponse, Http404, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from clients.models import ActiviteClient
 from clients.services import log_client_activity
 from notifications.services import resolve_pending_for_object
@@ -16,6 +18,13 @@ from .services import (
 )
 
 
+GENERATED_PDF_TYPES = {
+    DocumentType.CONTRAT_PDF,
+    DocumentType.BON_PAIEMENT,
+    DocumentType.RETRAIT_BANCAIRE,
+}
+
+
 def _user_can_access_sinistre(user, sinistre):
     if user.is_internal:
         return True
@@ -28,8 +37,182 @@ def _user_can_access_bien(user, bien):
     return hasattr(user, 'client_profile') and bien.client_id == user.client_profile.id
 
 
+def _user_can_access_document(user, document):
+    if user.is_internal:
+        return True
+    if not hasattr(user, 'client_profile'):
+        return False
+    client = document.client
+    return client is not None and client.pk == user.client_profile.pk
+
+
 def _documents_list_url(user):
     return 'documents_client:list' if user.is_client else 'documents:list'
+
+
+def _document_ns(user):
+    return 'documents_client' if user.is_client else 'documents'
+
+
+def _back_url_for_document(request, document):
+    if document.contrat_id:
+        if request.user.is_client:
+            return reverse('contrats_client:detail', args=[document.contrat_id])
+        return reverse('contrats:detail', args=[document.contrat_id])
+    if document.sinistre_id:
+        if request.user.is_client:
+            return reverse('sinistres_client:detail', args=[document.sinistre_id])
+        return reverse('sinistres:detail', args=[document.sinistre_id])
+    if document.bien_id:
+        if request.user.is_client:
+            return reverse('biens_client:detail', args=[document.bien_id])
+        return reverse('biens:detail', args=[document.bien_id])
+    ns = _document_ns(request.user)
+    return reverse(f'{ns}:list')
+
+
+def _retrait_montant(sinistre):
+    montant = getattr(sinistre, 'montant_indemnise', None)
+    if montant is not None:
+        return montant
+    rapport = getattr(sinistre, 'rapport', None) or getattr(sinistre, 'rapport_indemnisation', None)
+    if rapport is not None:
+        return getattr(rapport, 'montant_indemnise', None) or getattr(rapport, 'montant', 0) or 0
+    return getattr(sinistre, 'montant_estime', None) or 0
+
+
+def _render_generated_html(document, *, pdf_mode, download_url='', back_url='', theme_preference='system'):
+    from contrats.services import (
+        render_bon_paiement_html,
+        render_contrat_html,
+        render_retrait_html,
+    )
+
+    extra = {'theme_preference': theme_preference}
+
+    if document.type_document == DocumentType.CONTRAT_PDF and document.contrat_id:
+        return render_contrat_html(
+            document.contrat,
+            pdf_mode=pdf_mode,
+            download_url=download_url,
+            back_url=back_url,
+            **extra,
+        )
+    if document.type_document == DocumentType.BON_PAIEMENT and document.contrat_id:
+        return render_bon_paiement_html(
+            document.contrat,
+            pdf_mode=pdf_mode,
+            download_url=download_url,
+            back_url=back_url,
+            **extra,
+        )
+    if document.type_document == DocumentType.RETRAIT_BANCAIRE and document.sinistre_id:
+        return render_retrait_html(
+            document.sinistre,
+            _retrait_montant(document.sinistre),
+            pdf_mode=pdf_mode,
+            download_url=download_url,
+            back_url=back_url,
+            **extra,
+        )
+    return None
+
+
+@login_required
+def document_preview(request, pk):
+    """Aperçu HTML (documents générés) ou iframe fichier + lien de téléchargement."""
+    document = get_object_or_404(
+        Document.objects.select_related(
+            'contrat', 'contrat__client', 'contrat__client__user', 'contrat__bien',
+            'sinistre', 'sinistre__contrat', 'sinistre__contrat__client',
+            'sinistre__contrat__client__user', 'sinistre__contrat__bien',
+            'bien', 'bien__client',
+        ),
+        pk=pk,
+    )
+    if not _user_can_access_document(request.user, document):
+        messages.error(request, 'Accès refusé.')
+        return redirect(_documents_list_url(request.user))
+
+    ns = _document_ns(request.user)
+    download_url = reverse(f'{ns}:download', args=[document.pk])
+    back_url = _back_url_for_document(request, document)
+
+    if document.type_document in GENERATED_PDF_TYPES:
+        theme = getattr(request.user, 'theme_preference', None) or 'system'
+        html = _render_generated_html(
+            document,
+            pdf_mode=False,
+            download_url=download_url,
+            back_url=back_url,
+            theme_preference=theme,
+        )
+        if html:
+            return HttpResponse(html)
+
+    name = (document.fichier.name or '').lower()
+    return render(request, 'documents/file_preview.html', {
+        'document': document,
+        'download_url': download_url,
+        'back_url': back_url,
+        'is_pdf': name.endswith('.pdf'),
+        'is_image': name.endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif')),
+    })
+
+
+@login_required
+def document_download(request, pk):
+    """Téléchargement du PDF (régénère via Playwright si besoin)."""
+    document = get_object_or_404(
+        Document.objects.select_related(
+            'contrat', 'contrat__client', 'contrat__client__user', 'contrat__bien',
+            'sinistre', 'sinistre__contrat', 'sinistre__contrat__client',
+            'sinistre__contrat__client__user', 'sinistre__contrat__bien',
+        ),
+        pk=pk,
+    )
+    if not _user_can_access_document(request.user, document):
+        messages.error(request, 'Accès refusé.')
+        return redirect(_documents_list_url(request.user))
+
+    safe_title = ''.join(c if c.isalnum() or c in '-_' else '_' for c in document.titre)[:80]
+    filename = f'{safe_title or "document"}.pdf'
+
+    # Documents générés : toujours régénérés via Playwright pour coller à l'aperçu HTML
+    if document.type_document in GENERATED_PDF_TYPES:
+        from core.pdf import html_to_pdf
+
+        html = _render_generated_html(document, pdf_mode=True)
+        if html:
+            pdf_bytes = html_to_pdf(html)
+            if pdf_bytes:
+                response = HttpResponse(pdf_bytes, content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
+
+    name = (document.fichier.name or '').lower()
+    if name.endswith('.pdf') and document.fichier:
+        try:
+            return FileResponse(
+                document.fichier.open('rb'),
+                as_attachment=True,
+                filename=filename,
+                content_type='application/pdf',
+            )
+        except Exception:
+            pass
+
+    if document.fichier:
+        try:
+            return FileResponse(
+                document.fichier.open('rb'),
+                as_attachment=True,
+                filename=document.fichier.name.split('/')[-1],
+            )
+        except Exception as exc:
+            raise Http404('Fichier introuvable.') from exc
+
+    raise Http404('Document introuvable.')
 
 
 @login_required

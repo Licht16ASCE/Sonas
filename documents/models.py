@@ -25,6 +25,9 @@ class DocumentType(models.TextChoices):
     PHOTO = 'PHOTO', 'Photo'
     RAPPORT = 'RAPPORT', 'Rapport'
     CONTRAT_PDF = 'CONTRAT_PDF', 'Contrat PDF'
+    BON_PAIEMENT = 'BON_PAIEMENT', 'Bon de paiement'
+    PREUVE_PAIEMENT = 'PREUVE_PAIEMENT', 'Preuve de paiement'
+    RETRAIT_BANCAIRE = 'RETRAIT_BANCAIRE', 'Retrait bancaire'
     AUTRE = 'AUTRE', 'Autre'
 
 

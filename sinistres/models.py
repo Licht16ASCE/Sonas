@@ -22,6 +22,11 @@ class SinistreType(models.TextChoices):
     AUTRE = 'AUTRE', 'Autre'
 
 
+class StatutRetraitPaiement(models.TextChoices):
+    ROUGE = 'ROUGE', 'Non indemnisé / preuve manquante'
+    VERT = 'VERT', 'Indemnisé — preuve fournie'
+
+
 class Sinistre(models.Model):
     """Sinistre lié à un contrat actif."""
 
@@ -90,6 +95,25 @@ class Sinistre(models.Model):
     )
     date_soumission = models.DateTimeField(null=True, blank=True)
     is_urgent = models.BooleanField(default=False)
+    statut_retrait_paiement = models.CharField(
+        max_length=10,
+        choices=StatutRetraitPaiement.choices,
+        default=StatutRetraitPaiement.ROUGE,
+    )
+    document_retrait_bancaire = models.ForeignKey(
+        'documents.Document',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sinistres_retrait_bancaire',
+    )
+    preuve_retrait_indemnisation = models.ForeignKey(
+        'documents.Document',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sinistres_preuve_retrait',
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -139,6 +163,14 @@ class Sinistre(models.Model):
         if self.en_attente_validation_gerant:
             return 'En attente validation gérant'
         return self.get_statut_display()
+
+    @property
+    def est_indemnise_vert(self):
+        return self.statut_retrait_paiement == StatutRetraitPaiement.VERT
+
+    def marquer_retrait_vert(self):
+        self.statut_retrait_paiement = StatutRetraitPaiement.VERT
+        self.save(update_fields=['statut_retrait_paiement', 'updated_at'])
 
 
 class RapportIndemnisation(models.Model):
